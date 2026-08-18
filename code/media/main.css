@@ -1047,6 +1047,8 @@ button:disabled {
 .dropdown-category {
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  margin: 0;
 }
 
 /* Category header toggle button for provider accordions (LM Studio, Gemini, Mistral AI, etc.) */
@@ -1055,18 +1057,20 @@ button:disabled {
   justify-content: space-between;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  margin: 1px 0;
+  padding: 5px 10px;
+  margin: 0;
   background: var(--app-surface-strong);
   color: var(--app-muted);
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   user-select: none;
-  border: 0;
+  border: 0 !important;
   border-radius: var(--app-radius-sm);
   outline: none;
-  transition: color 0.15s ease;
+  width: 100%;
+  box-sizing: border-box;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .dropdown-category-header:hover,
@@ -1082,6 +1086,9 @@ button:disabled {
 .dropdown-category-content {
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
   max-height: 1000px;
   overflow: visible;
   transition: max-height 0.2s ease;
@@ -1090,6 +1097,7 @@ button:disabled {
 .dropdown-category-content.collapsed {
   max-height: 0;
   overflow: hidden;
+  gap: 0;
 }
 
 /* Unified button option item for ALL dropdowns (Model Selector & Thinking Dropdown) */
@@ -1099,21 +1107,21 @@ button:disabled {
   align-items: center;
   justify-content: flex-start;
   gap: 6px;
-  padding: 4px 10px;
-  margin: 1px 2px;
+  padding: 5px 10px;
+  margin: 0;
   overflow: visible;
   white-space: nowrap;
   text-overflow: ellipsis;
   color: var(--app-muted);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   background: transparent;
   position: relative;
   cursor: pointer;
   user-select: none;
-  border: 1px solid transparent;
+  border: 0 !important;
   border-radius: var(--app-radius-sm);
   outline: none;
-  width: calc(100% - 4px);
+  width: 100%;
   text-align: left;
   box-sizing: border-box;
   transition: background-color 0.15s ease, color 0.15s ease;

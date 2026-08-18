@@ -112,11 +112,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     if (data.providerKeys && typeof data.providerKeys === 'object') {
                         for (const [configKey, keyValue] of Object.entries(data.providerKeys)) {
                             await config.update(configKey, keyValue as string, vscode.ConfigurationTarget.Global);
-                            const envName = configKey.replace('ApiKey', '_API_KEY').toUpperCase();
-                            envUpdates[envName] = keyValue as string;
                         }
                     }
-                    this._syncEnvFile(envUpdates);
 
                     if (languageChanged && this._view) {
                         this._view.webview.html = this._getHtmlForWebview(this._view.webview);
@@ -342,63 +339,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             translations: translations,
             language: activeLang
         });
-
-        // Also ensure current config keys are synced to .env file
-        const envSync: Record<string, string> = {
-            'GEMINI_API_KEY': apiKey
-        };
-        for (const p of FREE_PROVIDERS) {
-            const keyVal = config.get<string>(p.configKey) || '';
-            if (keyVal) {
-                const envName = p.configKey.replace('ApiKey', '_API_KEY').toUpperCase();
-                envSync[envName] = keyVal;
-            }
-        }
-        this._syncEnvFile(envSync);
-    }
-
-    /**
-     * Synchronizes API keys to the workspace root .env file.
-     * @param envEntries Mapping of environment variable names to API key values.
-     */
-    private _syncEnvFile(envEntries: Record<string, string>) {
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (!workspaceFolders || workspaceFolders.length === 0) {
-            return;
-        }
-        const envPath = path.join(workspaceFolders[0].uri.fsPath, '.env');
-        let lines: string[] = [];
-        if (fs.existsSync(envPath)) {
-            lines = fs.readFileSync(envPath, 'utf8').split(/\r?\n/);
-        }
-
-        const envMap = new Map<string, string>();
-        for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed || trimmed.startsWith('#')) continue;
-            const eqIdx = trimmed.indexOf('=');
-            if (eqIdx !== -1) {
-                const key = trimmed.slice(0, eqIdx).trim();
-                const val = trimmed.slice(eqIdx + 1).trim();
-                envMap.set(key, val);
-            }
-        }
-
-        for (const [key, val] of Object.entries(envEntries)) {
-            if (val) {
-                envMap.set(key, val);
-            }
-        }
-
-        const updatedContent = Array.from(envMap.entries())
-            .map(([k, v]) => `${k}=${v}`)
-            .join('\n') + '\n';
-
-        try {
-            fs.writeFileSync(envPath, updatedContent, 'utf8');
-        } catch (e) {
-            console.error('Failed to sync .env file:', e);
-        }
     }
 
     /**
