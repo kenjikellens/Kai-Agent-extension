@@ -698,6 +698,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         const helpModalControllerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'HelpModalController.js'));
         const historyManagerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'HistoryManager.js'));
         const settingsControllerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'SettingsController.js'));
+        const modelSettingsControllerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'ModelSettingsController.js'));
         const modelDropdownControllerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'ModelDropdownController.js'));
         const chatUIControllerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'ChatUIController.js'));
         const promptSubmissionOrchestratorUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'PromptSubmissionOrchestrator.js'));
@@ -787,8 +788,13 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                                                 </div>
                                             </div>
 
-                                            <!-- Dynamic Model Capabilities Toolbar (Think Toggle & Reasoning Effort Dropdown) -->
-                                            <div id="model-capabilities-toolbar" class="model-capabilities-toolbar"></div>
+                                            <!-- Model Settings Chevron-Only Dropdown (Thinking Toggle & Reasoning Effort Popup) -->
+                                            <div class="custom-dropdown hidden" id="model-settings-dropdown-container">
+                                                <button type="button" class="chevron-only-btn" id="model-settings-trigger-btn" title="Model Settings">
+                                                    <svg class="dropdown-chevron" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                </button>
+                                                <div class="dropdown-menu hidden" id="model-settings-menu"></div>
+                                            </div>
                                         </div>
                                         <div class="toolbar-right">
                                             <!--
@@ -968,6 +974,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                 <script nonce="${nonce}" src="${helpModalControllerUri}"></script>
                 <script nonce="${nonce}" src="${historyManagerUri}"></script>
                 <script nonce="${nonce}" src="${settingsControllerUri}"></script>
+                <script nonce="${nonce}" src="${modelSettingsControllerUri}"></script>
                 <script nonce="${nonce}" src="${modelDropdownControllerUri}"></script>
                 <script nonce="${nonce}" src="${chatUIControllerUri}"></script>
                 <script nonce="${nonce}" src="${promptSubmissionOrchestratorUri}"></script>
