@@ -198,6 +198,13 @@ class SettingsController {
         }
 
         if (this.apiKeyInput) {
+            this.apiKeyInput.addEventListener('input', () => {
+                const keyVal = this.apiKeyInput.value.trim();
+                localStorage.setItem('kai.geminiApiKey', keyVal);
+                localStorage.setItem('kai.apiKey', keyVal);
+                if (this.settingsRepo) this.settingsRepo.setProviderKey('geminiApiKey', keyVal);
+                window.dispatchEvent(new CustomEvent('kaiProviderKeysUpdated'));
+            });
             this.apiKeyInput.addEventListener('change', () => {
                 this.saveAllSettings();
             });
@@ -340,6 +347,15 @@ class SettingsController {
             input.dataset.configKey = provider.configKey;
             input.placeholder = provider.keyHint || 'Enter API key…';
             input.value = provider.apiKey || '';
+
+            input.addEventListener('input', () => {
+                provider.apiKey = input.value.trim();
+                if (provider.configKey) {
+                    localStorage.setItem(`kai.${provider.configKey}`, provider.apiKey);
+                    if (this.settingsRepo) this.settingsRepo.setProviderKey(provider.configKey, provider.apiKey);
+                    window.dispatchEvent(new CustomEvent('kaiProviderKeysUpdated'));
+                }
+            });
 
             input.addEventListener('change', () => this.saveAllSettings());
 

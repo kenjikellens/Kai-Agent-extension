@@ -774,22 +774,58 @@ class ModelDropdownController {
     }
 
     /**
-     * Resolves currently selected model details including bare model ID and thinking toggle flag.
-     * @returns {object} Object containing model ID string, boolean thinking flag, and reasoning effort.
+     * Determines provider requirements and key status for a given model ID.
+     * @param {string} modelId Model identifier string.
+     * @returns {object|null} Provider descriptor object or null if local.
      */
-    getSelectedModelDetails() {
-        let raw = this.selectedModelValue || 'local-model';
-        
-        if (raw.endsWith(' (thinking)')) {
+    getProviderInfo(modelId) {
+        if (!modelId) return null;
+        const bare = modelId.endsWith(' (thinking)') ? modelId.slice(0, -11) : modelId;
+        const lower = bare.toLowerCase();
+        if (lower.startsWith('gemini') || lower.includes('gemini')) {
+            const key = (localStorage.getItem('kai.geminiApiKey') || localStorage.getItem('kai.apiKey') || '').trim();
             return {
-                model: raw.slice(0, -11),
-                thinking: true,
-                isThinkingCapable: true,
-                reasoningEffort: 'xhigh'
+                providerName: 'Google Gemini',
+                configKey: 'geminiApiKey',
+                keyHint: 'Get free key at aistudio.google.com/app/apikey',
+                url: 'https://aistudio.google.com/app/apikey',
+                hasKey: !!key,
+                modelName: this.formatter ? this.formatter.formatModelName(bare) : bare
             };
         }
+        const freeProviders = (typeof KAI_CONSTANTS !== 'undefined' && KAI_CONSTANTS.DEFAULT_FREE_PROVIDERS) || [];
+        for (const p of freeProviders) {
+            const pKey = p.name.toLowerCase().split(' ')[0];
+            if (lower.startsWith(pKey) || lower.includes(pKey)) {
+                const key = (localStorage.getItem(`kai.${p.configKey}`) || '').trim();
+                let url = '';
+                if (p.configKey === 'mistralApiKey') url = 'https://console.mistral.ai';
+                else if (p.configKey === 'cohereApiKey') url = 'https://dashboard.cohere.com';
+                else if (p.configKey === 'cerebrasApiKey') url = 'https://cloud.cerebras.ai';
+                else if (p.configKey === 'zhipuApiKey') url = 'https://open.bigmodel.cn';
+                return {
+                    providerName: p.name,
+                    configKey: p.configKey,
+                    keyHint: p.keyHint,
+                    url: url,
+                    hasKey: !!key,
+                    modelName: this.formatter ? this.formatter.formatModelName(bare) : bare
+                };
+            }
+        }
+        return null;
+    }
 
+    /**
+     * Resolves currently selected model details including bare model ID and thinking toggle flag.
+     * @param {string} [modelId] Optional target model ID to inspect.
+     * @returns {object} Object containing model ID string, boolean thinking flag, and reasoning effort.
+     */
+    getSelectedModelDetails(modelId = null) {
+        const targetModel = modelId || this.selectedModelValue || 'local-model';
+        const raw = targetModel.endsWith(' (thinking)') ? targetModel.slice(0, -11) : targetModel;
         const thinkingState = ThinkingStateFormatter.getThinkingState(raw);
+
         if (!thinkingState.isThinkingCapable) {
             return {
                 model: raw,
@@ -821,7 +857,7 @@ class ModelDropdownController {
     }
 
     /**
-     * Sets active model ID and updates UI elements.
+     * Sets active model ID and updates UI elements and connection status indicators.
      * @param {string} modelId Model ID.
      */
     setSelectedModel(modelId) {
@@ -831,6 +867,18 @@ class ModelDropdownController {
             container: this.selectedModelText,
             formatter: this.formatter
         });
+
+        const info = this.getProviderInfo(modelId);
+        let isConnected = true;
+        if (info) {
+            isConnected = info.hasKey;
+        } else if (this.isModelConnectedFn) {
+            isConnected = this.isModelConnectedFn(modelId);
+        }
+
+        if (this.statusDot) {
+            this.statusDot.className = isConnected ? 'status-dot status-connected' : 'status-dot status-disconnected';
+        }
 
         if (this.dropdownOptionsMenu) {
             const items = this.dropdownOptionsMenu.querySelectorAll('.dropdown-item');

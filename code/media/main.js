@@ -1,5 +1,5 @@
 /**
- * Client-side entry script for Kai Agent Chat Webview.
+ * Client-side entry script for Kai Agent Chat Webview (VS Code Extension).
  * Instantiates and orchestrates ES6 OOP modules.
  */
 (function () {
@@ -8,6 +8,7 @@
     const formatter = new MarkdownFormatter();
     const ipcBridge = new WebviewIPCBridge();
     const fileSummaryWidget = new FileSummaryWidget();
+    const sessionRepository = new SessionRepository(ipcBridge);
 
     // 2. Instantiate Feature and View Controllers
     const settingsController = new SettingsController(ipcBridge);
@@ -17,15 +18,6 @@
     const modelDropdownController = new ModelDropdownController(formatter, (selectedModel) => {
         appState.selectedModelValue = selectedModel;
         saveCurrentChat();
-
-        // Automatically unload previous models and load selected LM Studio model in memory
-        if (selectedModel && !selectedModel.toLowerCase().startsWith('gemini') && selectedModel !== 'local-model') {
-            const freeProviders = (typeof KAI_CONSTANTS !== 'undefined' && KAI_CONSTANTS.DEFAULT_FREE_PROVIDERS) || [];
-            const isFreeProvider = freeProviders.some(p => (p.models || []).includes(selectedModel));
-            if (!isFreeProvider) {
-                ipcBridge.switchLMStudioModel(selectedModel);
-            }
-        }
     });
 
     const historyManager = new HistoryManager(ipcBridge, (viewName) => {
@@ -41,112 +33,48 @@
         modelDropdownController
     );
 
+    // 3. Mode Manager (3 workspace modes in VS Code: ask, agent, planning)
+    const modeManager = new ModeManager({
+        appState: appState,
+        contextModeSelector: document.getElementById('context-options-menu'),
+        atMentionTriggerBtn: document.getElementById('at-mention-trigger-btn'),
+        contextOptionsMenu: document.getElementById('context-options-menu'),
+        messageInput: document.getElementById('message-input'),
+        onModeChange: (newMode) => {
+            saveCurrentChat();
+        }
+    });
+
+    // 4. Prompt Submission Orchestrator
+    const promptOrchestrator = new PromptSubmissionOrchestrator({
+        appState: appState,
+        chatUIController: chatUIController,
+        modelDropdownController: modelDropdownController,
+        fileUploadController: fileUploadController,
+        settingsController: settingsController,
+        ipcBridge: ipcBridge,
+        sessionRepository: sessionRepository
+    });
+
     // Wire Retry Callback (Rolls back last turn and re-runs previous prompt)
     chatUIController.onRetry = async (assistantMessageElement) => {
         if (appState.isWaitingForResponse) return;
-
-        // Find last user prompt
-        const lastUserMsg = [...appState.messages].reverse().find(m => m.role === 'user');
-        if (!lastUserMsg) return;
-
-        // Remove the last assistant message from UI
-        if (assistantMessageElement) {
-            assistantMessageElement.remove();
-        }
-
-        // Pop last assistant message from history & uiEvents
-        if (appState.messages.length > 0 && appState.messages[appState.messages.length - 1].role === 'assistant') {
-            appState.messages.pop();
-        }
-        if (appState.uiEvents.length > 0 && appState.uiEvents[appState.uiEvents.length - 1].type === 'assistant') {
-            appState.uiEvents.pop();
-        }
-
-        chatUIController.resetAssistantStream();
-        chatUIController.setUiLoading(true, appState);
-        saveCurrentChat();
-
-        const modelDetails = modelDropdownController.getSelectedModelDetails();
-        const geminiThinkingLevel = modelDetails.reasoningEffort || settingsController.getGeminiThinkingLevel(modelDetails.model);
-
-        ipcBridge.sendUserPrompt(
-            appState.messages,
-            modelDetails.model,
-            modelDetails.thinking,
-            geminiThinkingLevel,
-            appState.activeMode === 'planning',
-            [],
-            appState.activeMode,
-            appState.currentChatId
-        );
+        await promptOrchestrator.retryLastTurn(assistantMessageElement);
     };
 
     // Wire Edit Prompt Callback
     chatUIController.onEditPrompt = async (userMessageRowElement, editedText) => {
         if (appState.isWaitingForResponse) return;
         if (!editedText || !editedText.trim()) return;
-
-        const textToSend = editedText.trim();
-
-        // Add the edited prompt to state & UI
-        appState.addMessage({ role: 'user', content: textToSend });
-        appState.addUiEvent({ type: 'user', text: textToSend });
-        chatUIController.appendMessage('user', textToSend);
-
-        chatUIController.resetAssistantStream();
-        chatUIController.setUiLoading(true, appState);
-        saveCurrentChat();
-
-        const modelDetails = modelDropdownController.getSelectedModelDetails();
-        const geminiThinkingLevel = modelDetails.reasoningEffort || settingsController.getGeminiThinkingLevel(modelDetails.model);
-
-        ipcBridge.sendUserPrompt(
-            appState.messages,
-            modelDetails.model,
-            modelDetails.thinking,
-            geminiThinkingLevel,
-            appState.activeMode === 'planning',
-            [],
-            appState.activeMode,
-            appState.currentChatId
-        );
+        await promptOrchestrator.editPrompt(userMessageRowElement, editedText);
     };
 
     // DOM Element References for Input Orchestration
     const messageInput = document.getElementById('message-input');
     const sendBtn = document.getElementById('send-btn');
     const newChatBtn = document.getElementById('new-chat-btn');
-    const attachFileBtn = document.getElementById('attach-file-btn');
     const atMentionTriggerBtn = document.getElementById('at-mention-trigger-btn');
     const contextOptionsMenu = document.getElementById('context-options-menu');
-    const modeOptAgent = document.getElementById('mode-opt-agent');
-    const modeOptAsk = document.getElementById('mode-opt-ask');
-    const modeOptPlanning = document.getElementById('mode-opt-planning');
-
-    /**
-     * Sets active mode in state and highlights the selected mode option in the @ menu.
-     * @param {'agent'|'ask'|'planning'} mode Target mode.
-     */
-    function setActiveMode(mode) {
-        appState.activeMode = mode;
-        appState.isPlanningModeEnabled = (mode === 'planning');
-        localStorage.setItem('kai.activeMode', mode);
-
-        if (modeOptAgent) modeOptAgent.classList.toggle('active', mode === 'agent');
-        if (modeOptAsk) modeOptAsk.classList.toggle('active', mode === 'ask');
-        if (modeOptPlanning) modeOptPlanning.classList.toggle('active', mode === 'planning');
-
-        if (atMentionTriggerBtn) {
-            atMentionTriggerBtn.classList.toggle('active-mode', mode !== 'agent');
-        }
-    }
-
-    if (modeOptAgent) modeOptAgent.addEventListener('click', () => { setActiveMode('agent'); if (contextOptionsMenu) contextOptionsMenu.classList.add('hidden'); });
-    if (modeOptAsk) modeOptAsk.addEventListener('click', () => { setActiveMode('ask'); if (contextOptionsMenu) contextOptionsMenu.classList.add('hidden'); });
-    if (modeOptPlanning) modeOptPlanning.addEventListener('click', () => { setActiveMode('planning'); if (contextOptionsMenu) contextOptionsMenu.classList.add('hidden'); });
-
-    // Initialize initial mode from state
-    setActiveMode(appState.activeMode || 'agent');
 
     // Delegate Proceed button inside plan card: switches mode to agent and executes
     if (chatUIController.chatContainer) {
@@ -155,7 +83,7 @@
             if (proceedBtn) {
                 if (appState.isWaitingForResponse) return;
                 proceedBtn.disabled = true;
-                setActiveMode('agent');
+                modeManager.setActiveMode('agent');
                 if (messageInput) {
                     messageInput.value = 'Proceed with the implementation plan.';
                 }
@@ -164,30 +92,16 @@
         });
     }
 
-    let isDirty = false;
-
-    /**
-     * Marks state as changed so the 500ms debounced timer will persist it.
-     */
-    function markDirty() {
-        isDirty = true;
-    }
-
     /**
      * Persists current active chat session to workspace state.
      */
     function saveCurrentChat() {
-        const details = modelDropdownController.getSelectedModelDetails();
-        ipcBridge.saveChat(appState.toChatPayload(details.thinking));
-        isDirty = false;
-    }
-
-    // Auto-save interval checking every 500ms if there are unsaved state changes
-    setInterval(() => {
-        if (isDirty && appState.currentChatId) {
-            saveCurrentChat();
+        if (!appState.messages || appState.messages.length === 0) {
+            return;
         }
-    }, 500);
+        const details = modelDropdownController.getSelectedModelDetails();
+        sessionRepository.saveSession(appState.toChatPayload(details.thinking));
+    }
 
     /**
      * Sends user prompt input to extension host or aborts ongoing generation.
@@ -206,19 +120,11 @@
             return;
         }
 
-        chatUIController.resetAssistantStream();
-
         let userPrompt = '';
         if (appState.selectedCodeContext) {
             userPrompt += `Here is the selected code context from the editor:\n\`\`\`\n${appState.selectedCodeContext}\n\`\`\`\n\n`;
         }
         userPrompt += text;
-
-        appState.addMessage({ role: 'user', content: userPrompt });
-        const userDisplayText = text || 'Sent selected code context';
-        appState.addUiEvent({ type: 'user', text: userDisplayText });
-
-        chatUIController.appendMessage('user', userDisplayText);
 
         if (messageInput) {
             messageInput.value = '';
@@ -226,25 +132,7 @@
         }
         appState.selectedCodeContext = '';
 
-        chatUIController.setUiLoading(true, appState);
-        saveCurrentChat();
-
-        const modelDetails = modelDropdownController.getSelectedModelDetails();
-        const geminiThinkingLevel = modelDetails.reasoningEffort || settingsController.getGeminiThinkingLevel(modelDetails.model);
-
-        const attachedFilesCopy = fileUploadController.getAttachedFiles();
-        fileUploadController.clear();
-
-        ipcBridge.sendUserPrompt(
-            appState.messages,
-            modelDetails.model,
-            modelDetails.thinking,
-            geminiThinkingLevel,
-            appState.isPlanningModeEnabled,
-            attachedFilesCopy,
-            appState.activeMode,
-            appState.currentChatId
-        );
+        promptOrchestrator.submitPrompt(userPrompt);
     }
 
     /**
@@ -256,6 +144,7 @@
         chatUIController.resetAssistantStream();
         appState.loadSession(chat);
 
+        modeManager.setActiveMode(appState.activeMode || 'agent');
         chatUIController.renderUiEvents(appState.uiEvents, appState.messages);
         modelDropdownController.setSelectedModel(appState.selectedModelValue);
 
@@ -360,15 +249,13 @@
         }
     });
 
-
-
     const handleAgentProgress = (message) => {
         const payload = message.event || message;
         if (payload.type && !payload.progressType) {
             payload.progressType = payload.type;
         }
         chatUIController.handleAgentProgress(payload, appState);
-        markDirty();
+        sessionRepository.markDirty(appState.toChatPayload(modelDropdownController.getSelectedModelDetails().thinking));
     };
 
     ipcBridge.on('agentProgress', handleAgentProgress);
@@ -412,7 +299,6 @@
         if (chatUIController.currentAssistantMsgElement) {
             if (formatted.trim()) {
                 chatUIController.currentAssistantMsgElement.querySelector('.message-content').innerHTML = formatted;
-                // Append action bar if not present
                 const existingActions = chatUIController.currentAssistantMsgElement.querySelector('.message-actions');
                 if (!existingActions) {
                     chatUIController.currentAssistantMsgElement.appendChild(chatUIController.createAssistantActionBar(appState.activeMode, effectiveMeta));
@@ -430,7 +316,6 @@
             appState.addMessage({ role: 'assistant', content: replyContent });
         }
 
-        // If assistant content was not already streamed into uiEvents, add it now
         const lastEvt = appState.uiEvents[appState.uiEvents.length - 1];
         if (replyContent && (!lastEvt || lastEvt.type !== 'assistant')) {
             appState.addUiEvent({

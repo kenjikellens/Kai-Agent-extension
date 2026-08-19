@@ -258,6 +258,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         this._currentStreamingText = '';
         this._currentStreamingMessages = messages;
 
+        // If an LM Studio model is selected, switch/load it on send
+        if (model && model !== 'local-model' && !model.toLowerCase().startsWith('gemini')) {
+            const isFreeProvider = FREE_PROVIDERS.some(p => p.models.includes(model));
+            if (!isFreeProvider) {
+                await this._handleSwitchLMStudioModel(model);
+            }
+        }
+
         try {
             const userPrompt = messages.length > 0 ? messages[messages.length - 1].content : '';
             const history = messages.slice(0, -1);
@@ -665,6 +673,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         // Resolve resources from media directory
         const constantsUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'Constants.js'));
         const domUtilsUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'DOMUtils.js'));
+        const streamBufferPipelineUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'StreamBufferPipeline.js'));
+        const modelProviderResolverUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'ModelProviderResolver.js'));
+        const sessionRepositoryUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'SessionRepository.js'));
+        const settingsRepositoryUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'SettingsRepository.js'));
         const appStateUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'AppState.js'));
         const markdownFormatterUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'MarkdownFormatter.js'));
         const ipcBridgeUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'WebviewIPCBridge.js'));
@@ -672,12 +684,24 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         const toggleComponentUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'ToggleComponent.js'));
         const customSelectComponentUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'CustomSelectComponent.js'));
         const thinkingStateFormatterUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'ThinkingStateFormatter.js'));
-        const modelDropdownControllerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'ModelDropdownController.js'));
-        const settingsControllerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'SettingsController.js'));
-        const historyManagerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'HistoryManager.js'));
+        const apiKeyNoticeCardUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'ApiKeyNoticeCard.js'));
+        const toolStatusCardUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'ToolStatusCard.js'));
+        const thinkingBlockComponentUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'ThinkingBlockComponent.js'));
+        const planCardComponentUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'PlanCardComponent.js'));
+        const userMessageBubbleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'UserMessageBubble.js'));
+        const assistantMessageBubbleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'AssistantMessageBubble.js'));
+        const inlinePromptEditorUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'InlinePromptEditor.js'));
+        const activityStatusIndicatorUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'ActivityStatusIndicator.js'));
+        const welcomeHeroComponentUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'WelcomeHeroComponent.js'));
+        const modeManagerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'ModeManager.js'));
         const fileUploadControllerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'FileUploadController.js'));
         const helpModalControllerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'HelpModalController.js'));
+        const historyManagerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'HistoryManager.js'));
+        const settingsControllerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'SettingsController.js'));
+        const modelDropdownControllerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'ModelDropdownController.js'));
         const chatUIControllerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'ChatUIController.js'));
+        const promptSubmissionOrchestratorUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'PromptSubmissionOrchestrator.js'));
+        const hashRouterUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'HashRouter.js'));
         const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'main.js'));
         const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'main.css'));
         const codiconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'codicons', 'codicon.css'));
@@ -916,6 +940,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                 <!-- Load all modular ES6 Javascript controllers -->
                 <script nonce="${nonce}" src="${constantsUri}"></script>
                 <script nonce="${nonce}" src="${domUtilsUri}"></script>
+                <script nonce="${nonce}" src="${streamBufferPipelineUri}"></script>
+                <script nonce="${nonce}" src="${modelProviderResolverUri}"></script>
+                <script nonce="${nonce}" src="${sessionRepositoryUri}"></script>
+                <script nonce="${nonce}" src="${settingsRepositoryUri}"></script>
                 <script nonce="${nonce}" src="${appStateUri}"></script>
                 <script nonce="${nonce}" src="${markdownFormatterUri}"></script>
                 <script nonce="${nonce}" src="${ipcBridgeUri}"></script>
@@ -923,12 +951,24 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                 <script nonce="${nonce}" src="${toggleComponentUri}"></script>
                 <script nonce="${nonce}" src="${customSelectComponentUri}"></script>
                 <script nonce="${nonce}" src="${thinkingStateFormatterUri}"></script>
-                <script nonce="${nonce}" src="${modelDropdownControllerUri}"></script>
-                <script nonce="${nonce}" src="${settingsControllerUri}"></script>
-                <script nonce="${nonce}" src="${historyManagerUri}"></script>
+                <script nonce="${nonce}" src="${apiKeyNoticeCardUri}"></script>
+                <script nonce="${nonce}" src="${toolStatusCardUri}"></script>
+                <script nonce="${nonce}" src="${thinkingBlockComponentUri}"></script>
+                <script nonce="${nonce}" src="${planCardComponentUri}"></script>
+                <script nonce="${nonce}" src="${userMessageBubbleUri}"></script>
+                <script nonce="${nonce}" src="${assistantMessageBubbleUri}"></script>
+                <script nonce="${nonce}" src="${inlinePromptEditorUri}"></script>
+                <script nonce="${nonce}" src="${activityStatusIndicatorUri}"></script>
+                <script nonce="${nonce}" src="${welcomeHeroComponentUri}"></script>
+                <script nonce="${nonce}" src="${modeManagerUri}"></script>
                 <script nonce="${nonce}" src="${fileUploadControllerUri}"></script>
                 <script nonce="${nonce}" src="${helpModalControllerUri}"></script>
+                <script nonce="${nonce}" src="${historyManagerUri}"></script>
+                <script nonce="${nonce}" src="${settingsControllerUri}"></script>
+                <script nonce="${nonce}" src="${modelDropdownControllerUri}"></script>
                 <script nonce="${nonce}" src="${chatUIControllerUri}"></script>
+                <script nonce="${nonce}" src="${promptSubmissionOrchestratorUri}"></script>
+                <script nonce="${nonce}" src="${hashRouterUri}"></script>
                 <script nonce="${nonce}" src="${scriptUri}"></script>
             </body>
             </html>`;

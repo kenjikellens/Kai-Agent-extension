@@ -109,7 +109,25 @@ class HistoryManager {
             
             deleteBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                this.ipcBridge.deleteChat(chat.id);
+                const chatIdToDelete = chat.id;
+                const wasActive = (this.activeChatId === chatIdToDelete);
+
+                try {
+                    let localSaved = JSON.parse(localStorage.getItem('kai.savedChats') || '[]');
+                    localSaved = localSaved.filter(c => c.id !== chatIdToDelete);
+                    localStorage.setItem('kai.savedChats', JSON.stringify(localSaved));
+                    this.renderHistoryList(localSaved.map(c => ({
+                        id: c.id,
+                        title: c.title || 'New Chat',
+                        timestamp: c.timestamp || Date.now()
+                    })));
+                } catch (err) {}
+
+                this.ipcBridge.deleteChat(chatIdToDelete);
+
+                if (wasActive && typeof this.onDeleteActiveChat === 'function') {
+                    this.onDeleteActiveChat(chatIdToDelete);
+                }
             });
             
             item.addEventListener('click', () => {
