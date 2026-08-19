@@ -1267,23 +1267,23 @@ button:disabled {
   margin: 0;
 }
 
-/* Settings & Help category wrapper - 2px distance between category containers */
+/* Settings & Help category wrapper - Clean compact spacing with permanent subtle border */
 .settings-category {
   position: relative;
-  margin-top: 3px;
-  margin-bottom: 3px;
-  padding: 6px 10px;
-  border: 1px solid transparent;
-  border-radius: var(--app-radius-md, 6px);
+  margin-top: 2px;
+  margin-bottom: 2px;
+  padding: 4px 8px;
+  border: 1px solid var(--app-border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: var(--app-radius-sm, 4px);
+  background: transparent;
   box-sizing: border-box;
   width: 100%;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: border-color 0.15s ease;
 }
 
-/* Light subtle border around the currently open category container */
+/* Light highlight border when category is open */
 .settings-category:not(.collapsed) {
-  border-color: var(--app-border-subtle, rgba(255, 255, 255, 0.1));
-  background: rgba(255, 255, 255, 0.02);
+  border-color: var(--app-border-strong, rgba(255, 255, 255, 0.15));
 }
 
 .settings-category.has-open-select {
@@ -1298,13 +1298,13 @@ button:disabled {
   align-items: center;
   justify-content: flex-start;
   gap: 6px;
-  padding: 4px 0;
+  padding: 3px 0;
   margin-bottom: 0;
   background: transparent;
   border: 0;
   border-radius: 0;
   color: var(--app-fg);
-  font-size: 0.82rem;
+  font-size: 0.80rem;
   font-weight: 600;
   cursor: pointer;
   user-select: none;
@@ -1321,9 +1321,9 @@ button:disabled {
 /* Category Title - Uppercase, muted grey, refined larger text size */
 .category-title {
   text-transform: uppercase;
-  font-size: 0.80rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.5px;
   color: var(--app-muted);
 }
 
@@ -1331,10 +1331,10 @@ button:disabled {
 .setting-item label,
 .setting-label,
 .switch-label {
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   font-weight: 400;
   color: var(--app-fg);
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 /* Chevron icon next to category title, hidden by default, visible on hover only */
@@ -1355,22 +1355,22 @@ button:disabled {
   transform: rotate(-90deg);
 }
 
-/* Category Content Container - Internal padding on all sides (top, bottom, left, right) for all items */
+/* Category Content Container - Internal padding and compact spacing */
 .category-content {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px 6px 20px 6px;
+  gap: 6px;
+  padding: 8px 2px 8px 2px;
   box-sizing: border-box;
 }
 
 .category-content .setting-item {
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 
 #manage-keys-container {
-  margin-top: 4px;
-  margin-bottom: 2px;
+  margin-top: 2px;
+  margin-bottom: 1px;
 }
 
 .settings-category.collapsed .category-content {
