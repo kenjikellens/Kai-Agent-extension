@@ -190,40 +190,40 @@ class HelpModalController {
         bodyEl.innerHTML = '';
 
         sections.forEach((sec, idx) => {
-            const itemEl = document.createElement('div');
-            // First item expanded by default
-            itemEl.className = `help-accordion-item ${idx === 0 ? 'expanded' : ''}`;
-            itemEl.dataset.sectionId = sec.id;
+            const categoryDiv = document.createElement('div');
+            // First item expanded by default, rest collapsed
+            categoryDiv.className = `settings-category ${idx === 0 ? '' : 'collapsed'}`;
+            categoryDiv.id = sec.id;
 
             const headerBtn = document.createElement('button');
             headerBtn.type = 'button';
-            headerBtn.className = 'help-accordion-header';
+            headerBtn.className = 'category-header-btn';
             headerBtn.innerHTML = `
-                <span class="help-accordion-title">${sec.title}</span>
-                <svg class="help-accordion-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                <span class="category-title">${sec.title}</span>
+                <svg class="category-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
             `;
 
-            const contentEl = document.createElement('div');
-            contentEl.className = 'help-accordion-content';
-            contentEl.innerHTML = `<div class="help-accordion-inner">${sec.content}</div>`;
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'category-content';
+            contentDiv.innerHTML = `<div class="help-accordion-inner">${sec.content}</div>`;
 
             headerBtn.addEventListener('click', () => {
-                const wasExpanded = itemEl.classList.contains('expanded');
+                const isCurrentlyCollapsed = categoryDiv.classList.contains('collapsed');
 
-                // Single-accordion rule: close all other items first
-                bodyEl.querySelectorAll('.help-accordion-item').forEach(el => {
-                    el.classList.remove('expanded');
+                // Single-accordion rule: collapse all items first
+                bodyEl.querySelectorAll('.settings-category').forEach(el => {
+                    el.classList.add('collapsed');
                 });
 
                 // Toggle target item
-                if (!wasExpanded) {
-                    itemEl.classList.add('expanded');
+                if (isCurrentlyCollapsed) {
+                    categoryDiv.classList.remove('collapsed');
                 }
             });
 
-            itemEl.appendChild(headerBtn);
-            itemEl.appendChild(contentEl);
-            bodyEl.appendChild(itemEl);
+            categoryDiv.appendChild(headerBtn);
+            categoryDiv.appendChild(contentDiv);
+            bodyEl.appendChild(categoryDiv);
         });
     }
 }
