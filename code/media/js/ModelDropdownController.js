@@ -343,7 +343,7 @@ class ModelDropdownController {
                             flyoutOpt.addEventListener('click', handleFlyoutSelect);
                             flyoutInner.appendChild(flyoutOpt);
                         });
-                    } else if (isMistralReasoning) {
+                      } else if (isMistralReasoning) {
                         const isMistralThinkingOn = localStorage.getItem(`kai.mistralThinking.${itemData.rawModel}`) !== 'false';
                         
                         const flyoutRow = document.createElement('div');
@@ -394,30 +394,40 @@ class ModelDropdownController {
                                     ThinkingStateFormatter.lmStudioCapabilities[lowerModel];
                         let fields = (cap && Array.isArray(cap.fields) && cap.fields.length > 0) ? cap.fields : [];
 
-                        // Fallback default fields for Qwen, GLM, Gemma, DeepSeek when no manifest is available
-                        if (fields.length === 0 && (lowerModel.includes('qwen') || lowerModel.includes('qwq') || lowerModel.includes('glm') || lowerModel.includes('gemma') || lowerModel.includes('deepseek') || lowerModel.includes('r1'))) {
-                            fields = [
-                                {
-                                    displayName: 'Thinking',
-                                    type: 'boolean',
-                                    variable: 'enable_thinking'
-                                },
-                                {
-                                    displayName: 'Reasoning Effort',
-                                    type: 'select',
-                                    variable: 'reasoning_effort',
-                                    options: [
-                                        { label: 'xhigh', value: 'xhigh' },
-                                        { label: 'Medium', value: 'medium' },
-                                        { label: 'Low', value: 'low' }
-                                    ]
-                                }
-                            ];
+                        // Fallback fields strictly when no manifest exists
+                        if (fields.length === 0) {
+                            if (lowerModel.includes('qwen') || lowerModel.includes('qwq') || lowerModel.includes('glm')) {
+                                fields = [
+                                    {
+                                        displayName: 'Thinking',
+                                        type: 'boolean',
+                                        variable: 'enable_thinking'
+                                    },
+                                    {
+                                        displayName: 'Reasoning Effort',
+                                        type: 'select',
+                                        variable: 'reasoning_effort',
+                                        options: [
+                                            { label: 'xhigh', value: 'xhigh' },
+                                            { label: 'Medium', value: 'medium' },
+                                            { label: 'Low', value: 'low' }
+                                        ]
+                                    }
+                                ];
+                            } else if (lowerModel.includes('gemma') || lowerModel.includes('bonsai') || lowerModel.includes('deepseek') || lowerModel.includes('r1')) {
+                                fields = [
+                                    {
+                                        displayName: 'Thinking',
+                                        type: 'boolean',
+                                        variable: 'enable_thinking'
+                                    }
+                                ];
+                            }
                         }
 
                         // Separate boolean toggle and select fields
                         const selectField = fields.find(f => f.type === 'select' && Array.isArray(f.options) && f.options.length > 0);
-                        const booleanField = fields.find(f => f.type === 'boolean');
+                        const booleanField = fields.find(f => f.type === 'boolean') || (!selectField && thinkingState.isThinkingCapable);
 
                         // 1. Render Select options FIRST (xhigh, Medium, Low)
                         if (selectField) {
@@ -450,16 +460,13 @@ class ModelDropdownController {
                                     e.stopPropagation();
                                     localStorage.setItem(`kai.lmStudioReasoningLevel.${itemData.rawModel}`, opt.value);
                                     localStorage.setItem('kai.lmStudioReasoningLevel', opt.value);
-
                                     this.selectedModelValue = itemData.value;
                                     localStorage.setItem('kai.selectedModel', itemData.value);
 
-                                    flyoutInner.querySelectorAll('.flyout-option').forEach(optionEl => {
-                                        if (optionEl.tagName === 'BUTTON') {
-                                            optionEl.classList.remove('selected');
-                                            const oldCheck = optionEl.querySelector('.check-icon');
-                                            if (oldCheck) oldCheck.remove();
-                                        }
+                                    flyoutInner.querySelectorAll('.flyout-option').forEach(el => {
+                                        el.classList.remove('selected');
+                                        const oldCheck = el.querySelector('.check-icon');
+                                        if (oldCheck) oldCheck.remove();
                                     });
                                     flyoutOpt.classList.add('selected');
                                     const checkSvg = DOMUtils.createCheckIcon('check-icon');
@@ -481,20 +488,13 @@ class ModelDropdownController {
                             });
                         }
 
-                        // 2. Render Divider between Select and Toggle (if both exist)
-                        if (selectField && booleanField) {
-                            const divider = document.createElement('div');
-                            divider.className = 'flyout-divider';
-                            flyoutInner.appendChild(divider);
-                        }
-
-                        // 3. Render Boolean Toggle at the bottom (Thinking [toggle])
+                        // 2. Render Boolean Toggle SECOND (Thinking Toggle switch)
                         if (booleanField) {
-                            const flyoutRow = document.createElement('div');
-                            flyoutRow.className = 'dropdown-item flyout-option';
-                            flyoutRow.style.width = 'calc(100% - 4px)';
-                            flyoutRow.style.justifyContent = 'space-between';
-                            flyoutRow.style.gap = '12px';
+                            const toggleRow = document.createElement('div');
+                            toggleRow.className = 'dropdown-item flyout-option';
+                            toggleRow.style.width = 'calc(100% - 4px)';
+                            toggleRow.style.justifyContent = 'space-between';
+                            toggleRow.style.gap = '12px';
 
                             const leftWrapper = document.createElement('div');
                             leftWrapper.style.display = 'inline-flex';
@@ -506,7 +506,7 @@ class ModelDropdownController {
                             const toggleEl = ToggleComponent.create({
                                 id: `lm-thinking-toggle-${itemData.rawModel.replace(/[^a-zA-Z0-9_-]/g, '_')}`,
                                 checked: isLmThinkingOn,
-                                title: 'Enable thinking process for this model',
+                                title: 'Enable reasoning/thinking for this local model',
                                 onChange: (checked) => {
                                     localStorage.setItem(`kai.lmStudioThinking.${itemData.rawModel}`, checked ? 'true' : 'false');
                                     this.setSelectedModel(this.selectedModelValue);
@@ -516,10 +516,10 @@ class ModelDropdownController {
                                 }
                             });
 
-                            flyoutRow.appendChild(leftWrapper);
-                            flyoutRow.appendChild(toggleEl);
+                            toggleRow.appendChild(leftWrapper);
+                            toggleRow.appendChild(toggleEl);
 
-                            flyoutRow.addEventListener('click', (e) => {
+                            toggleRow.addEventListener('click', (e) => {
                                 e.stopPropagation();
                                 const checkbox = toggleEl.querySelector('input[type="checkbox"]');
                                 if (checkbox && e.target !== checkbox) {
@@ -528,7 +528,7 @@ class ModelDropdownController {
                                 }
                             });
 
-                            flyoutInner.appendChild(flyoutRow);
+                            flyoutInner.appendChild(toggleRow);
                         }
                     }
 
