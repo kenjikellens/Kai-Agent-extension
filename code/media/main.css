@@ -1626,8 +1626,9 @@ button:disabled {
   }
 }
 
+/* Thinking content body container */
 .thinking-content {
-  max-height: 78px;
+  max-height: var(--app-thinking-max-height, 150px);
   overflow-y: auto;
   white-space: pre-wrap;
   color: var(--app-muted);

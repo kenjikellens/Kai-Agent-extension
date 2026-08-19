@@ -534,9 +534,16 @@ export class SearchEngine {
                     const $snippet = $element.find(snippetSelector).first();
                     if ($snippet.length) {
                         snippet = $snippet.text().trim();
-                        console.log(`[SearchEngine] Found snippet with ${snippetSelector}: "${snippet.substring(0, 100)}..."`);
-                        break;
+                        if (snippet) {
+                            console.log(`[SearchEngine] Found snippet with ${snippetSelector}: "${snippet.substring(0, 100)}..."`);
+                            break;
+                        }
                     }
+                }
+                if (!snippet) {
+                    const $clone = $element.clone();
+                    $clone.find('h1, h2, h3, h4, a, cite, .title, .url').remove();
+                    snippet = $clone.text().replace(/\s+/g, ' ').trim();
                 }
                 if (title && url && this.isValidSearchUrl(url)) {
                     console.log(`[SearchEngine] Adding result: ${title}`);
@@ -642,18 +649,29 @@ export class SearchEngine {
                 }
                 // Try multiple snippet selectors for Brave
                 const snippetSelectors = [
-                    '.snippet-content', // Brave specific
-                    '.snippet', // Generic
-                    '.description', // Alternative
-                    'p' // Fallback paragraph
+                    '.snippet-description',
+                    '.snippet-content',
+                    '.snippet.description',
+                    '.snippet',
+                    '.description',
+                    '[data-testid="snippet"]',
+                    '.result-snippet',
+                    '.body',
+                    '.text-sm',
+                    'p'
                 ];
                 let snippet = '';
                 for (const snippetSelector of snippetSelectors) {
                     const $snippetElement = $element.find(snippetSelector).first();
                     if ($snippetElement.length) {
                         snippet = $snippetElement.text().trim();
-                        break;
+                        if (snippet) break;
                     }
+                }
+                if (!snippet) {
+                    const $clone = $element.clone();
+                    $clone.find('h1, h2, h3, h4, a, cite, .title, .url, [data-type="title"]').remove();
+                    snippet = $clone.text().replace(/\s+/g, ' ').trim();
                 }
                 if (title && url && this.isValidSearchUrl(url)) {
                     console.log(`[SearchEngine] Brave found: "${title}" -> "${url}"`);
