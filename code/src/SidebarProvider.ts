@@ -73,7 +73,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                         data.thinking,
                         data.geminiThinkingLevel || 'high',
                         data.planningMode || false,
-                        data.attachedFiles || []
+                        data.attachedFiles || [],
+                        data.mode || 'agent',
+                        data.sessionId
                     );
                     break;
                 }
@@ -190,7 +192,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         thinking: boolean = true,
         geminiThinkingLevel: string = 'high',
         planningMode: boolean = false,
-        attachedFiles: any[] = []
+        attachedFiles: any[] = [],
+        mode: string = 'agent',
+        _sessionId?: string
     ) {
         if (!this._view) {
             return;
@@ -243,8 +247,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                 activeFile,
                 thinking,
                 geminiThinkingLevel,
-                planningMode,
-                attachedFiles
+                planningMode || mode === 'planning',
+                attachedFiles,
+                16000,
+                mode
             );
 
             // Signal stream completion to the webview
@@ -284,38 +290,50 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         const activeLang = I18nManager.getActiveLanguage();
 
         const buildFreeProviders = () => {
-            return FREE_PROVIDERS.map(p => {
-                return {
-                    name: p.name,
-                    configKey: p.configKey,
-                    keyHint: p.keyHint,
-                    models: p.models,
-                    apiKey: config.get<string>(p.configKey) || ''
-                };
-            });
+            return FREE_PROVIDERS.map(p => ({
+                name: p.name,
+                configKey: p.configKey,
+                keyHint: p.keyHint,
+                models: p.models,
+                apiKey: (config.get<string>(p.configKey) || '').trim(),
+                connected: false
+            }));
         };
 
-        // 1. Perform fast async model discovery
-        const client = new LMStudioClient(serverUrl);
+        const client = new LMStudioClient(serverUrl, apiKey);
+        const rawFreeProviders = buildFreeProviders();
 
-        const [lmResult, geminiResult] = await Promise.allSettled([
+        // Perform fast concurrent validation across local server, Gemini, and cloud providers
+        const [lmResult, geminiValidationResult, ...freeValidationResults] = await Promise.allSettled([
             client.getLMStudioModels(),
-            client.getGeminiModels(apiKey)
+            apiKey ? client.validateGemini(apiKey) : Promise.resolve(false),
+            ...rawFreeProviders.map(p => p.apiKey ? client.validateFreeProvider(p.configKey, p.apiKey) : Promise.resolve(false))
         ]);
 
         const lmModels = lmResult.status === 'fulfilled' ? lmResult.value : [];
         const lmStudioConnected = lmResult.status === 'fulfilled' && lmModels.length > 0;
-        const geminiModels = geminiResult.status === 'fulfilled' ? geminiResult.value : [];
+        const isGeminiValid = geminiValidationResult.status === 'fulfilled' ? Boolean(geminiValidationResult.value) : false;
+        const geminiModels = await client.getGeminiModels();
+
+        const updatedFreeProviders = rawFreeProviders.map((p, idx) => {
+            const valRes = freeValidationResults[idx];
+            const isConnected = valRes && valRes.status === 'fulfilled' ? Boolean(valRes.value) : false;
+            return {
+                ...p,
+                connected: isConnected
+            };
+        });
 
         let loadedModels: string[] = [];
         if (lmStudioConnected) {
             loadedModels = await client.getLoadedModels().catch(() => []);
-        } else {
+        } else if (isGeminiValid) {
             loadedModels = [...geminiModels];
         }
 
-        const activeModel = lmModels.length > 0 ? lmModels[0] : (geminiModels.length > 0 ? geminiModels[0] : 'local-model');
-        const updatedFreeProviders = buildFreeProviders();
+        const activeModel = lmModels.length > 0
+            ? lmModels[0]
+            : (isGeminiValid && geminiModels.length > 0 ? geminiModels[0] : 'local-model');
 
         // 2. Validate LM Studio Cache directory and extract model capabilities
         const lmStudioCacheDir = config.get<string>('lmStudioCacheDir') || '';
@@ -664,19 +682,30 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                                         </div>
                                         <div class="toolbar-right">
                                             <!--
-                                                CONTEXT & CAPABILITIES DROPDOWN ("@" BUTTON):
-                                                Dropdown containing feature toggles such as Planning Mode.
+                                                CONTEXT & MODE SELECTOR DROPDOWN ("@" BUTTON):
+                                                Dropdown containing mode options: Agent, Ask, Plan.
                                             -->
                                             <div class="custom-dropdown" id="context-options-dropdown-container">
-                                                <button type="button" class="toolbar-icon-btn" id="at-mention-trigger-btn" title="Capabilities & Mentions (@)">
+                                                <button type="button" class="toolbar-icon-btn" id="at-mention-trigger-btn" title="Modes & Capabilities (@)">
                                                     ${svgs.at || ''}
                                                 </button>
                                                 <div class="dropdown-menu hidden" id="context-options-menu">
                                                     <div class="context-options-header">
-                                                        <span>Capabilities</span>
+                                                        <span>Select Mode</span>
                                                     </div>
-                                                    <div class="context-option-row" id="planning-mode-option-row">
-                                                        <!-- Planning Mode toggle populated dynamically via ToggleComponent -->
+                                                    <div class="context-modes-list" id="context-mode-selector">
+                                                        <button type="button" class="context-mode-item active" id="mode-opt-agent" data-mode="agent" title="Autonomous code editing and tool execution">
+                                                            <span class="mode-icon">${svgs.agent_mode || '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>'}</span>
+                                                            <span>Agent</span>
+                                                        </button>
+                                                        <button type="button" class="context-mode-item" id="mode-opt-ask" data-mode="ask" title="Read-only workspace exploration and Q&A">
+                                                            <span class="mode-icon">${svgs.ask_mode || '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'}</span>
+                                                            <span>Ask</span>
+                                                        </button>
+                                                        <button type="button" class="context-mode-item" id="mode-opt-planning" data-mode="planning" title="Structured plan-first protocol before code edits">
+                                                            <span class="mode-icon">${svgs.plan_mode || '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>'}</span>
+                                                            <span>Plan</span>
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>

@@ -69,7 +69,7 @@ class WebviewIPCBridge {
      * @param {boolean} planningMode Whether planning mode is toggled on.
      * @param {Array} attachedFiles Array of attached file objects.
      */
-    sendUserPrompt(messages, model, thinking, geminiThinkingLevel = 'high', planningMode = false, attachedFiles = []) {
+    sendUserPrompt(messages, model, thinking, geminiThinkingLevel = 'high', planningMode = false, attachedFiles = [], mode = 'agent', sessionId = undefined) {
         this.postMessage({
             type: 'sendMessage',
             messages,
@@ -77,7 +77,9 @@ class WebviewIPCBridge {
             thinking,
             geminiThinkingLevel,
             planningMode,
-            attachedFiles
+            attachedFiles,
+            mode,
+            sessionId
         });
     }
 

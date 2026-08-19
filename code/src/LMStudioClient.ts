@@ -81,30 +81,67 @@ export class LMStudioClient implements ILLMProvider {
     }
 
     /**
-     * Fetches local LM Studio models via HTTP GET /models.
+     * Fetches local LM Studio models via HTTP GET /models with IPv4 and path fallbacks.
      */
     public async getLMStudioModels(): Promise<string[]> {
         const { hostname, port, pathPrefix } = this.parseServerUrl();
-        const url = `http://${hostname}:${port}${pathPrefix}/models`;
-        try {
-            const res = await HttpClient.getJson<{ data: any[] }>(url, {}, 1500);
-            if (res && Array.isArray(res.data)) {
-                const allIds = res.data.map((m: any) => m.id);
-                return LMStudioReasoningEngine.filterChatModels(allIds);
+        const urlsToTry = [
+            `http://${hostname}:${port}${pathPrefix}/models`,
+            `http://${hostname === 'localhost' ? '127.0.0.1' : 'localhost'}:${port}${pathPrefix}/models`,
+            `http://${hostname}:${port}/v1/models`,
+            `http://${hostname}:${port}/models`
+        ];
+
+        const uniqueUrls = Array.from(new Set(urlsToTry));
+
+        const probePromises = uniqueUrls.map(url => HttpClient.getJson<{ data: any[] }>(url, {}, 800));
+        const results = await Promise.allSettled(probePromises);
+
+        for (const res of results) {
+            if (res.status === 'fulfilled' && res.value && Array.isArray(res.value.data) && res.value.data.length > 0) {
+                const allIds = res.value.data.map((m: any) => m.id || m.name).filter(Boolean);
+                const filtered = LMStudioReasoningEngine.filterChatModels(allIds);
+                if (filtered.length > 0) {
+                    return filtered;
+                }
             }
-            return [];
-        } catch {
-            return [];
         }
+        return [];
     }
 
     /**
      * Fetches models currently loaded in LM Studio or Gemini.
      */
     public async getLoadedModels(): Promise<string[]> {
+        // 1. Try local lms CLI ps command
         const localLoaded = await this.getLocalLoadedModels().catch(() => []);
-        const geminiModels = await this.geminiClient.getModels().catch(() => []);
-        return [...localLoaded, ...geminiModels];
+        if (localLoaded.length > 0) {
+            return localLoaded;
+        }
+
+        // 2. Try LM Studio api/v0/models endpoint for models with state === 'loaded'
+        const { hostname, port } = this.parseServerUrl();
+        const urlsToTry = [
+            `http://${hostname}:${port}/api/v0/models`,
+            `http://${hostname === 'localhost' ? '127.0.0.1' : 'localhost'}:${port}/api/v0/models`
+        ];
+
+        for (const url of Array.from(new Set(urlsToTry))) {
+            try {
+                const res = await HttpClient.getJson<{ data: any[] }>(url, {}, 800);
+                if (res && Array.isArray(res.data)) {
+                    const loadedIds = res.data
+                        .filter((m: any) => m && m.state === 'loaded')
+                        .map((m: any) => m.id || m.name);
+                    const filtered = LMStudioReasoningEngine.filterChatModels(loadedIds);
+                    if (filtered.length > 0) {
+                        return filtered;
+                    }
+                }
+            } catch {}
+        }
+
+        return [];
     }
 
     /**
@@ -145,6 +182,25 @@ export class LMStudioClient implements ILLMProvider {
      */
     public async getGeminiModels(_apiKey?: string): Promise<string[]> {
         return this.geminiClient.getModels();
+    }
+
+    /**
+     * Validates if Gemini API key is valid.
+     * @param apiKey Optional explicit API key.
+     * @returns Promise resolving to boolean validity.
+     */
+    public async validateGemini(apiKey?: string): Promise<boolean> {
+        return this.geminiClient.validateApiKey(apiKey);
+    }
+
+    /**
+     * Validates if a free provider API key is working.
+     * @param configKey Provider configuration key.
+     * @param apiKey Optional explicit API key.
+     * @returns Promise resolving to boolean validity.
+     */
+    public async validateFreeProvider(configKey: string, apiKey?: string): Promise<boolean> {
+        return this.freeProviderClient.validateProvider(configKey, apiKey);
     }
 
     /**

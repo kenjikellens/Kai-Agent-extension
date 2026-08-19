@@ -31,9 +31,9 @@ class ThinkingStateFormatter {
 
         // 1. Check dynamic LM Studio manifest capabilities first
         const cap = ThinkingStateFormatter.lmStudioCapabilities[rawModel] ||
-                    ThinkingStateFormatter.lmStudioCapabilities[lowerRaw] ||
-                    ThinkingStateFormatter.lmStudioCapabilities[modelId] ||
-                    ThinkingStateFormatter.lmStudioCapabilities[lower];
+            ThinkingStateFormatter.lmStudioCapabilities[lowerRaw] ||
+            ThinkingStateFormatter.lmStudioCapabilities[modelId] ||
+            ThinkingStateFormatter.lmStudioCapabilities[lower];
 
         if (cap) {
             const fields = Array.isArray(cap.fields) ? cap.fields : [];
@@ -42,9 +42,9 @@ class ThinkingStateFormatter {
                 const hasBooleanField = fields.some(f => f.type === 'boolean');
                 const isLmThinkingOn = localStorage.getItem(`kai.lmStudioThinking.${rawModel}`) !== 'false';
                 const storedEffort = localStorage.getItem(`kai.lmStudioReasoningLevel.${rawModel}`) ||
-                                     localStorage.getItem(`kai.lmStudioReasoningLevel.${modelId}`) || 'xhigh';
+                    localStorage.getItem(`kai.lmStudioReasoningLevel.${modelId}`) || 'xhigh';
 
-                const effortLabels = { xhigh: 'X-High', high: 'X-High', medium: 'Medium', low: 'Low' };
+                const effortLabels = { xhigh: 'xhigh', high: 'xhigh', medium: 'medium', low: 'low' };
                 const effortKey = (storedEffort in effortLabels) ? storedEffort : 'xhigh';
 
                 if (hasSelectField || hasBooleanField) {
@@ -53,7 +53,7 @@ class ThinkingStateFormatter {
                         isMultiLevel: hasSelectField,
                         level: effortKey,
                         isOn: isLmThinkingOn,
-                        labelText: isLmThinkingOn ? 'thinking' : '',
+                        labelText: isLmThinkingOn ? (hasSelectField ? effortKey : 'thinking') : '',
                         rawModel: rawModel
                     };
                 }
@@ -63,10 +63,10 @@ class ThinkingStateFormatter {
         // 2. Gemini Multi-level models
         if (lowerRaw.includes('gemini')) {
             const level = localStorage.getItem(`kai.geminiThinkingLevel.${modelId}`) ||
-                          localStorage.getItem(`kai.geminiThinkingLevel.${rawModel}`) ||
-                          localStorage.getItem('kai.geminiThinkingLevel') || 'high';
-            const levelLabels = { high: 'High', medium: 'Medium', low: 'Low', minimal: 'Off' };
-            const labelText = levelLabels[level] || 'High';
+                localStorage.getItem(`kai.geminiThinkingLevel.${rawModel}`) ||
+                localStorage.getItem('kai.geminiThinkingLevel') || 'high';
+            const levelLabels = { high: 'high', medium: 'medium', low: 'low', minimal: 'off' };
+            const labelText = levelLabels[level] || 'high';
             const isOn = level !== 'minimal' && level !== 'off';
 
             return {
@@ -74,19 +74,18 @@ class ThinkingStateFormatter {
                 isMultiLevel: true,
                 level: level,
                 isOn: isOn,
-                labelText: labelText,
+                labelText: isOn ? labelText : '',
                 rawModel: rawModel
             };
         }
 
-        // 3. Qwen, GLM, Gemma, DeepSeek, and other reasoning local models (Fallback when no manifest)
-        const isReasoningLocal = lowerRaw.includes('qwen') || lowerRaw.includes('qwq') || lowerRaw.includes('glm') ||
-                                 lowerRaw.includes('gemma') || lowerRaw.includes('deepseek') || lowerRaw.includes('r1');
-        if (isReasoningLocal) {
+        // 3. Qwen Multi-level reasoning effort (Fallback when no manifest)
+        const isQwenReasoning = lowerRaw.includes('qwen') || lowerRaw.includes('qwq');
+        if (isQwenReasoning) {
             const isLmThinkingOn = localStorage.getItem(`kai.lmStudioThinking.${rawModel}`) !== 'false';
             const storedEffort = localStorage.getItem(`kai.lmStudioReasoningLevel.${rawModel}`) ||
-                                 localStorage.getItem(`kai.lmStudioReasoningLevel.${modelId}`) || 'xhigh';
-            const effortLabels = { xhigh: 'X-High', high: 'X-High', medium: 'Medium', low: 'Low' };
+                localStorage.getItem(`kai.lmStudioReasoningLevel.${modelId}`) || 'xhigh';
+            const effortLabels = { xhigh: 'xhigh', high: 'xhigh', medium: 'medium', low: 'low' };
             const effortKey = (storedEffort in effortLabels) ? storedEffort : 'xhigh';
 
             return {
@@ -94,7 +93,7 @@ class ThinkingStateFormatter {
                 isMultiLevel: true,
                 level: effortKey,
                 isOn: isLmThinkingOn,
-                labelText: isLmThinkingOn ? 'thinking' : '',
+                labelText: isLmThinkingOn ? effortKey : '',
                 rawModel: rawModel
             };
         }
@@ -109,7 +108,7 @@ class ThinkingStateFormatter {
                 isMultiLevel: false,
                 level: isOn ? 'high' : 'minimal',
                 isOn: isOn,
-                labelText: isOn ? 'Thinking' : '',
+                labelText: isOn ? 'thinking' : '',
                 rawModel: rawModel
             };
         }

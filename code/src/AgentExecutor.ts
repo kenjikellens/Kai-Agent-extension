@@ -66,7 +66,8 @@ export class AgentExecutor {
         geminiThinkingLevel: string = 'high',
         planningMode: boolean = false,
         attachedFiles?: any[],
-        maxContextTokens: number = 16000
+        maxContextTokens: number = 16000,
+        mode: string = 'agent'
     ): Promise<{ reply: string; messages: { role: string; content: string }[]; modifiedFiles: string[] }> {
         // Deep copy history to avoid mutating the original until loop is complete
         let messages: ContextMessage[] = [...chatHistory];
@@ -79,7 +80,7 @@ export class AgentExecutor {
         // Find existing system prompt or inject ours at the beginning
         let systemContent = this.getSystemPrompt(useNativeFunctionCalling);
         const now = new Date();
-        const currentDayTimeStr = `[Current Day and Time: ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}, ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}]`;
+        const currentDayTimeStr = `[Temporal Context & Knowledge Cutoff]\n- Current Date and Time: ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}, ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}\n- Your internal training cutoff is in the past. Events, releases, and information dated prior to the current date are historical facts, not future speculation.\n- NEVER state that an event, product, or topic prior to the current date is unreleased or speculative based on training cutoff limitations. Use available search tools if current details are required.`;
         systemContent += `\n\n${currentDayTimeStr}\n`;
 
         const existingSystemIndex = messages.findIndex((m) => m.role === 'system');
@@ -99,7 +100,7 @@ export class AgentExecutor {
         const isFirstMessage = messages.filter((m) => m.role === 'user' || m.role === 'assistant').length === 0;
         let contextPrefix = '';
 
-        if (planningMode) {
+        if (planningMode || mode === 'planning') {
             contextPrefix += `[STRICT PLANNING MODE ACTIVE]\n`;
             contextPrefix += `You are operating in strict Planning Mode. Follow this protocol strictly:\n`;
             contextPrefix += `1. RESEARCH PHASE: First, inspect the codebase using read-only tools (view_file, list_dir, grep_search) to understand context.\n`;
@@ -110,8 +111,11 @@ export class AgentExecutor {
             contextPrefix += `   ## Open Questions\n`;
             contextPrefix += `   ## Proposed Changes (grouped by component with [MODIFY] [NEW] [DELETE] file scheme links)\n`;
             contextPrefix += `   ## Verification Plan (Automated and Manual checks)\n`;
-            contextPrefix += `4. CHAT OUTPUT: DO NOT dump the full plan into the chat. In the chat message, output ONLY a brief 2-sentence summary pointing the user to the artifact link: '[Implementation Plan](file:///.kai/artifacts/implementation_plan.md)'.\n`;
-            contextPrefix += `5. GUARDRAIL: Do NOT make any code modifications or run invasive commands until the user reviews and approves the artifact plan.\n\n`;
+            contextPrefix += `4. CHAT OUTPUT: Enclose the summary in <implementation_plan title="Implementation Plan">...</implementation_plan> tags.\n`;
+            contextPrefix += `5. GUARDRAIL: Do NOT make any code modifications or run invasive commands until the user reviews and approves the plan.\n\n`;
+        } else if (mode === 'ask') {
+            contextPrefix += `[ASK MODE ACTIVE]\n`;
+            contextPrefix += `You are in Ask mode. You may inspect workspace files using read-only tools (read_file, list_dir, grep_search, symbol_search) to answer user questions, but do NOT execute write/edit tools or run modifying commands.\n\n`;
         }
 
         if (isFirstMessage && this.workspacePath && fs.existsSync(this.workspacePath)) {

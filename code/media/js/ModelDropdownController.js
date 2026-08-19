@@ -259,7 +259,7 @@ class ModelDropdownController {
                     item.classList.add('selected');
                 }
                 item.dataset.value = itemData.value;
-                const isLoaded = isModelConnectedFn ? isModelConnectedFn(itemData.rawModel) : true;
+                const isLoaded = isModelConnectedFn ? isModelConnectedFn(itemData.rawModel) : false;
                 const dotClass = isLoaded ? 'status-connected' : 'status-disconnected';
                 
                 const statusDotSpan = document.createElement('span');

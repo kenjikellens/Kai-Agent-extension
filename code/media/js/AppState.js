@@ -13,7 +13,8 @@ class AppState {
         this.selectedCodeContext = '';
         this.isWaitingForResponse = false;
         this.selectedModelValue = localStorage.getItem('kai.selectedModel') || 'local-model';
-        this.isPlanningModeEnabled = localStorage.getItem('kai.planningMode') === 'true';
+        this.activeMode = localStorage.getItem('kai.activeMode') || 'agent';
+        this.isPlanningModeEnabled = this.activeMode === 'planning';
         this.accordionStates = {};
     }
 
@@ -48,14 +49,28 @@ class AppState {
     /**
      * Updates or appends the current assistant response UI event payload.
      * @param {string} text Live assistant response text.
+     * @param {string} [mode] Active mode for the assistant turn.
+     * @param {object} [meta] Assistant metadata.
      */
-    updateOrAddAssistantUiEvent(text) {
+    updateOrAddAssistantUiEvent(text, mode, meta = {}) {
         if (!text) return;
         const lastEvt = this.uiEvents[this.uiEvents.length - 1];
         if (lastEvt && lastEvt.type === 'assistant' && lastEvt.isStreaming) {
             lastEvt.content = text;
+            if (mode) lastEvt.mode = mode;
+            if (meta.model) lastEvt.model = meta.model;
+            if (meta.thinking !== undefined) lastEvt.thinking = meta.thinking;
+            if (meta.reasoningEffort) lastEvt.reasoningEffort = meta.reasoningEffort;
         } else {
-            this.uiEvents.push({ type: 'assistant', content: text, isStreaming: true });
+            this.uiEvents.push({
+                type: 'assistant',
+                content: text,
+                isStreaming: true,
+                mode: mode || this.activeMode,
+                model: meta.model || this.selectedModelValue,
+                thinking: meta.thinking,
+                reasoningEffort: meta.reasoningEffort
+            });
         }
     }
 
@@ -88,6 +103,10 @@ class AppState {
         this.uiEvents = chat.uiEvents || [];
         if (chat.model) {
             this.selectedModelValue = chat.model;
+        }
+        if (chat.mode) {
+            this.activeMode = chat.mode;
+            this.isPlanningModeEnabled = (chat.mode === 'planning');
         }
         this.selectedCodeContext = '';
         this.isWaitingForResponse = false;
@@ -125,6 +144,7 @@ class AppState {
             messages: this.messages,
             uiEvents: this.uiEvents,
             model: this.selectedModelValue,
+            mode: this.activeMode,
             thinking: isThinkingChecked,
             timestamp: Date.now()
         };

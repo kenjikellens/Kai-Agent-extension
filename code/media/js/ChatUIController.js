@@ -10,13 +10,15 @@ class ChatUIController {
      * @param {FileSummaryWidget} fileSummaryWidget File summary widget instance.
      * @param {SettingsController} settingsController Settings controller instance.
      * @param {HelpModalController} [helpModalController] Help modal controller instance.
+     * @param {ModelDropdownController} [modelDropdownController] Model dropdown controller instance.
      */
-    constructor(formatter, ipcBridge, fileSummaryWidget, settingsController, helpModalController) {
+    constructor(formatter, ipcBridge, fileSummaryWidget, settingsController, helpModalController, modelDropdownController) {
         this.formatter = formatter;
         this.ipcBridge = ipcBridge;
         this.fileSummaryWidget = fileSummaryWidget;
         this.settingsController = settingsController;
         this.helpModalController = helpModalController;
+        this.modelDropdownController = modelDropdownController;
 
         this.chatContainer = document.getElementById('chat-container');
         this.messageInput = document.getElementById('message-input');
@@ -30,6 +32,10 @@ class ChatUIController {
 
         this.currentAssistantMsgElement = null;
         this.currentAssistantText = '';
+
+        // Callbacks for retry and edit prompt
+        this.onRetry = null;
+        this.onEditPrompt = null;
 
         this.initEventListeners();
         this.renderWelcomeHero();
@@ -112,8 +118,253 @@ class ChatUIController {
                             }
                         }
                     }
+                    return;
+                }
+
+                // 5b. Collapsible implementation plan card trigger
+                const planHeader = e.target.closest('.kai-plan-header');
+                if (planHeader) {
+                    const card = planHeader.closest('.kai-plan-card');
+                    if (card) {
+                        const isExpanded = card.classList.toggle('expanded');
+                        const label = planHeader.querySelector('.plan-toggle-label');
+                        if (label) {
+                            label.textContent = isExpanded ? 'Show less' : 'Show more';
+                        }
+                    }
+                    return;
+                }
+
+                // 6. Copy code snippet button
+                const copyBtn = e.target.closest('.copy-code-btn');
+                if (copyBtn) {
+                    const wrapper = copyBtn.closest('.code-block-wrapper');
+                    const codeEl = wrapper ? wrapper.querySelector('pre code') : null;
+                    if (codeEl) {
+                        const textToCopy = codeEl.textContent || '';
+                        navigator.clipboard.writeText(textToCopy).then(() => {
+                            const originalHTML = copyBtn.innerHTML;
+                            copyBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                            copyBtn.classList.add('copied');
+                            setTimeout(() => {
+                                copyBtn.innerHTML = originalHTML;
+                                copyBtn.classList.remove('copied');
+                            }, 1600);
+                        });
+                    }
+                    return;
+                }
+
+                // 7. Download code snippet file button
+                const downloadBtn = e.target.closest('.download-code-btn');
+                if (downloadBtn) {
+                    const wrapper = downloadBtn.closest('.code-block-wrapper');
+                    const codeEl = wrapper ? wrapper.querySelector('pre code') : null;
+                    if (codeEl) {
+                        const textToDownload = codeEl.textContent || '';
+                        const lang = (downloadBtn.dataset.lang || 'txt').toLowerCase();
+                        const extMap = {
+                            python: 'py', py: 'py', javascript: 'js', js: 'js', typescript: 'ts', ts: 'ts',
+                            html: 'html', css: 'css', json: 'json', csharp: 'cs', cs: 'cs', cpp: 'cpp', c: 'c',
+                            java: 'java', rust: 'rs', rs: 'rs', go: 'go', sql: 'sql', sh: 'sh', bash: 'sh',
+                            powershell: 'ps1', ps1: 'ps1', yaml: 'yml', yml: 'yml', markdown: 'md', md: 'md',
+                            xml: 'xml', php: 'php', ruby: 'rb', rb: 'rb'
+                        };
+                        const ext = extMap[lang] || 'txt';
+                        const blob = new Blob([textToDownload], { type: 'text/plain;charset=utf-8' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `snippet_${Date.now()}.${ext}`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }
+                    return;
+                }
+
+                // 8. Copy full response button on assistant message
+                const copyRespBtn = e.target.closest('.copy-response-btn');
+                if (copyRespBtn) {
+                    const assistantMsg = copyRespBtn.closest('.assistant-message');
+                    if (assistantMsg) {
+                        const rawText = assistantMsg.dataset.rawContent || (assistantMsg.querySelector('.message-content') ? assistantMsg.querySelector('.message-content').innerText : '') || '';
+                        navigator.clipboard.writeText(rawText).then(() => {
+                            const originalHTML = copyRespBtn.innerHTML;
+                            copyRespBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                            copyRespBtn.classList.add('copied');
+                            setTimeout(() => {
+                                copyRespBtn.innerHTML = originalHTML;
+                                copyRespBtn.classList.remove('copied');
+                            }, 1600);
+                        });
+                    }
+                    return;
+                }
+
+                // 8b. Toggle Raw text button on assistant message
+                const rawToggleBtn = e.target.closest('.toggle-raw-btn');
+                if (rawToggleBtn) {
+                    const assistantMsg = rawToggleBtn.closest('.assistant-message');
+                    if (assistantMsg) {
+                        const contentEl = assistantMsg.querySelector('.message-content');
+                        if (contentEl) {
+                            const isRaw = assistantMsg.classList.toggle('show-raw-mode');
+                            rawToggleBtn.classList.toggle('active', isRaw);
+                            const rawText = assistantMsg.dataset.rawContent || '';
+                            if (isRaw) {
+                                contentEl.dataset.formattedHtml = contentEl.innerHTML;
+                                contentEl.innerHTML = `<pre class="raw-markdown-pre"><code>${this.formatter.escapeHtml(rawText)}</code></pre>`;
+                            } else {
+                                if (contentEl.dataset.formattedHtml) {
+                                    contentEl.innerHTML = contentEl.dataset.formattedHtml;
+                                } else {
+                                    contentEl.innerHTML = this.formatter.formatMarkdown(rawText);
+                                }
+                            }
+                        }
+                    }
+                    return;
+                }
+
+                // 9. Retry / Redo button on assistant message
+                const retryBtn = e.target.closest('.retry-btn');
+                if (retryBtn) {
+                    const assistantMsg = retryBtn.closest('.assistant-message');
+                    if (assistantMsg && typeof this.onRetry === 'function') {
+                        this.onRetry(assistantMsg);
+                    }
+                    return;
+                }
+
+                // 10. Edit prompt button next to user message (opens inline editor inside chat bubble)
+                const editPromptBtn = e.target.closest('.edit-prompt-btn');
+                if (editPromptBtn) {
+                    const userRow = editPromptBtn.closest('.user-message-row');
+                    if (userRow) {
+                        this.openInlineEditor(userRow);
+                    }
+                    return;
+                }
+
+                // 11. Cancel button inside inline prompt editor
+                const cancelBtn = e.target.closest('.inline-cancel-btn');
+                if (cancelBtn) {
+                    const userRow = cancelBtn.closest('.user-message-row');
+                    if (userRow) {
+                        this.closeInlineEditor(userRow);
+                    }
+                    return;
+                }
+
+                // 12. Send button inside inline prompt editor
+                const inlineSendBtn = e.target.closest('.inline-send-btn');
+                if (inlineSendBtn) {
+                    const userRow = inlineSendBtn.closest('.user-message-row');
+                    if (userRow) {
+                        this.submitInlineEditor(userRow);
+                    }
+                    return;
                 }
             });
+        }
+    }
+
+    /**
+     * Opens an inline editor inside the specified user message row bubble.
+     * @param {HTMLElement} userRow The .user-message-row container.
+     */
+    openInlineEditor(userRow) {
+        if (!userRow || userRow.classList.contains('is-editing')) return;
+
+        if (this.chatContainer) {
+            this.chatContainer.querySelectorAll('.user-message-row.is-editing').forEach(row => {
+                this.closeInlineEditor(row);
+            });
+        }
+
+        const rawPrompt = userRow.dataset.rawPrompt || (userRow.querySelector('.message-content') ? userRow.querySelector('.message-content').innerText.trim() : '');
+        userRow.classList.add('is-editing');
+
+        const messageBubble = userRow.querySelector('.message.user-message');
+        const editBtn = userRow.querySelector('.edit-prompt-btn');
+        if (messageBubble) messageBubble.classList.add('hidden');
+        if (editBtn) editBtn.classList.add('hidden');
+
+        const sendSvg = window.KAI_SVGS['send'] || '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>';
+        const cancelSvg = window.KAI_SVGS['cancel'] || '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+
+        const editorDiv = document.createElement('div');
+        editorDiv.className = 'inline-prompt-editor';
+        editorDiv.innerHTML = `
+            <textarea class="inline-prompt-textarea" rows="2">${this.formatter.escapeHtml(rawPrompt)}</textarea>
+            <div class="inline-editor-actions">
+                <button type="button" class="inline-action-btn inline-cancel-btn" title="Cancel">
+                    ${cancelSvg}
+                </button>
+                <button type="button" class="inline-action-btn inline-send-btn" title="Send">
+                    ${sendSvg}
+                </button>
+            </div>
+        `;
+
+        const textarea = editorDiv.querySelector('.inline-prompt-textarea');
+        const autoResize = () => {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+        };
+
+        textarea.addEventListener('input', autoResize);
+        textarea.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.submitInlineEditor(userRow);
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                this.closeInlineEditor(userRow);
+            }
+        });
+
+        userRow.appendChild(editorDiv);
+        autoResize();
+        textarea.focus();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    }
+
+    /**
+     * Cancels inline editing and restores normal message bubble view.
+     * @param {HTMLElement} userRow The .user-message-row container.
+     */
+    closeInlineEditor(userRow) {
+        if (!userRow) return;
+        const editor = userRow.querySelector('.inline-prompt-editor');
+        if (editor) editor.remove();
+
+        const messageBubble = userRow.querySelector('.message.user-message');
+        const editBtn = userRow.querySelector('.edit-prompt-btn');
+        if (messageBubble) messageBubble.classList.remove('hidden');
+        if (editBtn) editBtn.classList.remove('hidden');
+
+        userRow.classList.remove('is-editing');
+    }
+
+    /**
+     * Submits the edited prompt from inside the inline editor.
+     * @param {HTMLElement} userRow The .user-message-row container.
+     */
+    submitInlineEditor(userRow) {
+        if (!userRow) return;
+        const textarea = userRow.querySelector('.inline-prompt-textarea');
+        const newText = textarea ? textarea.value.trim() : '';
+
+        if (!newText) {
+            this.closeInlineEditor(userRow);
+            return;
+        }
+
+        if (typeof this.onEditPrompt === 'function') {
+            this.onEditPrompt(userRow, newText);
         }
     }
 
@@ -172,11 +423,86 @@ class ChatUIController {
     }
 
     /**
+     * Creates an action toolbar containing Copy Response, View Raw, Retry buttons, and an Info button for assistant messages.
+     * @param {string} [mode] The mode under which the reply was generated ('agent' | 'planning' | 'ask').
+     * @param {object} [meta] Additional metadata including model and thinking parameters.
+     * @returns {HTMLElement} The actions toolbar element.
+     */
+    createAssistantActionBar(mode, meta = {}) {
+        const bar = document.createElement('div');
+        bar.className = 'message-actions';
+
+        const copySvg = window.KAI_SVGS['copy_response'] || '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+        const retrySvg = window.KAI_SVGS['retry'] || '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>';
+        const rawSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>';
+        const infoSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+
+        const rawModelName = meta.model || (this.settingsController ? this.settingsController.getSelectedModel() : '') || localStorage.getItem('kai.selectedModel') || 'Local Model';
+        const displayModelName = this.formatter.formatModelName(rawModelName);
+        const effectiveMode = mode || meta.mode || 'agent';
+        const modeLabel = effectiveMode === 'planning' ? 'Plan' : (effectiveMode.charAt(0).toUpperCase() + effectiveMode.slice(1));
+
+        // Check dropdown options directly to see if this model has reasoning capabilities / flyout
+        const lowerModel = rawModelName.toLowerCase();
+        const isGemini = lowerModel.includes('gemini');
+        const isMistralReasoning = lowerModel.includes('magistral') || lowerModel.includes('codestral') || lowerModel.includes('mistral-small') || lowerModel.includes('mistral-medium');
+        const isMuseGlimmer = lowerModel.includes('muse') || lowerModel.includes('glimmer');
+        const thinkingStateObj = ThinkingStateFormatter.getThinkingState(rawModelName);
+        
+        // A model supports thinking if and only if it has a thinking flyout in the dropdown
+        const hasReasoningSupport = isGemini || isMistralReasoning || (thinkingStateObj.isThinkingCapable && !isMuseGlimmer);
+
+        let thinkingState = 'Not supported';
+        if (hasReasoningSupport) {
+            const effort = meta.reasoningEffort || thinkingStateObj.level || '';
+            const effortDisplay = (effort && effort !== 'none' && effort !== 'off' && effort !== 'minimal') ? ` (${effort})` : '';
+            const isThinkingOn = meta.thinking !== undefined ? meta.thinking : thinkingStateObj.isOn;
+            thinkingState = isThinkingOn ? `On${effortDisplay}` : 'Off';
+        } else {
+            thinkingState = 'Not supported';
+        }
+
+        bar.innerHTML = `
+            <button type="button" class="msg-action-btn copy-response-btn" title="Copy response">
+                ${copySvg}
+            </button>
+            <button type="button" class="msg-action-btn toggle-raw-btn" title="View raw markdown">
+                ${rawSvg}
+            </button>
+            <button type="button" class="msg-action-btn retry-btn" title="Retry / Undo turn">
+                ${retrySvg}
+            </button>
+            <div class="message-info-container">
+                <button type="button" class="msg-info-btn" title="Message Details (Model & Settings)">
+                    ${infoSvg}
+                </button>
+                <div class="msg-info-popover">
+                    <div class="info-popover-row">
+                        <span class="info-popover-label">Model:</span>
+                        <span class="info-popover-value" title="${this.formatter.escapeHtml(rawModelName)}">${this.formatter.escapeHtml(displayModelName)}</span>
+                    </div>
+                    <div class="info-popover-row">
+                        <span class="info-popover-label">Mode:</span>
+                        <span class="info-popover-value">${this.formatter.escapeHtml(modeLabel)}</span>
+                    </div>
+                    <div class="info-popover-row">
+                        <span class="info-popover-label">Thinking / Reasoning:</span>
+                        <span class="info-popover-value">${this.formatter.escapeHtml(thinkingState)}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        return bar;
+    }
+
+    /**
      * Appends a message bubble into the scrollable chat container.
      * @param {string} role Sender role ('user', 'assistant', 'system', or 'file-summary').
      * @param {string} text Message content string.
+     * @param {string} [mode] Active mode for assistant messages.
+     * @param {object} [meta] Metadata for model & thinking parameters.
      */
-    appendMessage(role, text) {
+    appendMessage(role, text, mode, meta = {}) {
         this.removeWelcomeHero();
 
         if (role === 'user') {
@@ -210,13 +536,52 @@ class ChatUIController {
         const formatted = this.formatter.formatMarkdown(text);
         if (!formatted.trim()) return;
 
+        if (role === 'user') {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'user-message-row';
+            rowDiv.dataset.rawPrompt = text;
+
+            const editSvg = window.KAI_SVGS['edit_prompt'] || '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>';
+
+            const editBtn = document.createElement('button');
+            editBtn.type = 'button';
+            editBtn.className = 'edit-prompt-btn';
+            editBtn.title = 'Edit prompt';
+            editBtn.innerHTML = editSvg;
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user-message';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = formatted;
+            messageDiv.appendChild(contentDiv);
+
+            rowDiv.appendChild(editBtn);
+            rowDiv.appendChild(messageDiv);
+
+            if (this.chatContainer) {
+                this.chatContainer.appendChild(rowDiv);
+                this.scrollToBottom();
+            }
+            return;
+        }
+
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${role}-message`;
+        if (role === 'assistant') {
+            messageDiv.dataset.rawContent = text;
+            if (mode) messageDiv.dataset.mode = mode;
+        }
 
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
         contentDiv.innerHTML = formatted;
         messageDiv.appendChild(contentDiv);
+
+        if (role === 'assistant') {
+            messageDiv.appendChild(this.createAssistantActionBar(mode, meta));
+        }
 
         if (this.chatContainer) {
             this.chatContainer.appendChild(messageDiv);
@@ -239,10 +604,15 @@ class ChatUIController {
             appState.updateOrAddAssistantUiEvent(this.currentAssistantText);
             
             let forceThinkingCollapsed = null;
+            let forcePlanExpanded = null;
             if (this.currentAssistantMsgElement) {
                 const existingThinking = this.currentAssistantMsgElement.querySelector('.thinking-content');
                 if (existingThinking) {
                     forceThinkingCollapsed = existingThinking.classList.contains('collapsed');
+                }
+                const existingPlan = this.currentAssistantMsgElement.querySelector('.kai-plan-card');
+                if (existingPlan) {
+                    forcePlanExpanded = existingPlan.classList.contains('expanded');
                 }
             }
 
@@ -268,7 +638,7 @@ class ChatUIController {
                 const isThinkingChecked = (this.settingsController && this.settingsController.showThinkingToggle) 
                     ? this.settingsController.showThinkingToggle.checked 
                     : (localStorage.getItem('kai.showThinking') !== 'false');
-                const formatted = this.formatter.formatMarkdown(this.currentAssistantText, forceThinkingCollapsed, isThinkingChecked);
+                const formatted = this.formatter.formatMarkdown(this.currentAssistantText, forceThinkingCollapsed, isThinkingChecked, forcePlanExpanded);
                 
                 if (formatted.trim()) {
                     if (!this.currentAssistantMsgElement || (this.chatContainer && !this.chatContainer.contains(this.currentAssistantMsgElement))) {
@@ -282,7 +652,14 @@ class ChatUIController {
                             this.chatContainer.appendChild(this.currentAssistantMsgElement);
                         }
                     }
+                    this.currentAssistantMsgElement.dataset.rawContent = this.currentAssistantText;
                     this.currentAssistantMsgElement.querySelector('.message-content').innerHTML = formatted;
+
+                    // Ensure action bar is removed while actively streaming
+                    const existingActions = this.currentAssistantMsgElement.querySelector('.message-actions');
+                    if (existingActions) {
+                        existingActions.remove();
+                    }
 
                     const thinkingContentEl = this.currentAssistantMsgElement.querySelector('.thinking-content');
                     if (thinkingContentEl && !this.currentAssistantText.includes('</think>')) {
@@ -305,20 +682,30 @@ class ChatUIController {
             }
             this.resetAssistantStream();
             
-            appState.addUiEvent({
-                type: 'tool',
-                toolId: progress.toolId,
-                tool: progress.tool,
-                fileName: progress.fileName,
-                state: 'start'
-            });
+            let existingDiv = document.getElementById(progress.toolId);
+            if (existingDiv) {
+                existingDiv.innerHTML = this.getToolDescription(progress.tool, progress.fileName, 'start');
+                const evt = appState.uiEvents.find(e => e.type === 'tool' && e.toolId === progress.toolId);
+                if (evt) {
+                    evt.tool = progress.tool;
+                    evt.fileName = progress.fileName;
+                }
+            } else {
+                appState.addUiEvent({
+                    type: 'tool',
+                    toolId: progress.toolId,
+                    tool: progress.tool,
+                    fileName: progress.fileName,
+                    state: 'start'
+                });
 
-            const statusDiv = document.createElement('div');
-            statusDiv.id = progress.toolId;
-            statusDiv.className = 'tool-status-row in-progress';
-            statusDiv.innerHTML = this.getToolDescription(progress.tool, progress.fileName, 'start');
-            if (this.chatContainer) {
-                this.chatContainer.appendChild(statusDiv);
+                const statusDiv = document.createElement('div');
+                statusDiv.id = progress.toolId;
+                statusDiv.className = 'tool-status-row in-progress';
+                statusDiv.innerHTML = this.getToolDescription(progress.tool, progress.fileName, 'start');
+                if (this.chatContainer) {
+                    this.chatContainer.appendChild(statusDiv);
+                }
             }
         } else if (progress.progressType === 'tool_end') {
             const isError = progress.output && (
@@ -360,7 +747,8 @@ class ChatUIController {
      * @returns {string} Status header HTML string.
      */
     getToolDescription(tool, targetName, state) {
-        const iconSvg = window.KAI_SVGS[tool] || window.KAI_SVGS['default_tool'] || '';
+        const svgs = window.KAI_SVGS || (typeof KAI_CONSTANTS !== 'undefined' ? KAI_CONSTANTS.DEFAULT_SVGS : {}) || {};
+        const iconSvg = svgs[tool] || svgs['default_tool'] || '';
         let verb = '';
         
         switch (tool) {
@@ -380,6 +768,7 @@ class ChatUIController {
                 break;
             case 'grep_search':
             case 'search_web':
+            case 'web_search':
                 verb = state === 'start' ? 'searching' : (state === 'success' ? 'searched' : 'failed searching');
                 break;
             case 'symbol_search':
@@ -397,15 +786,33 @@ class ChatUIController {
             case 'delete_item':
                 verb = state === 'start' ? 'deleting' : (state === 'success' ? 'deleted' : 'failed deleting');
                 break;
+            case 'utility_tools':
+                verb = state === 'start' ? 'running utility' : (state === 'success' ? 'completed utility' : 'failed utility');
+                break;
+            case 'get_time':
+                verb = state === 'start' ? 'checking time' : (state === 'success' ? 'checked time' : 'failed time check');
+                break;
+            case 'calculate':
+                verb = state === 'start' ? 'calculating' : (state === 'success' ? 'calculated' : 'failed calculating');
+                break;
+            case 'unit_converter':
+                verb = state === 'start' ? 'converting' : (state === 'success' ? 'converted' : 'failed converting');
+                break;
+            case 'text_stats':
+                verb = state === 'start' ? 'analysing text' : (state === 'success' ? 'analysed text' : 'failed text analysis');
+                break;
+            case 'uuid_random':
+                verb = state === 'start' ? 'generating' : (state === 'success' ? 'generated' : 'failed generating');
+                break;
             default:
                 verb = state === 'start' ? 'running' : (state === 'success' ? 'completed' : 'failed');
         }
 
         const prefixSvg = state === 'start' 
-            ? (window.KAI_SVGS['spinner'] || '') 
+            ? (svgs['spinner'] || '<span class="thinking-spinner"></span>') 
             : (state === 'success' 
-                ? (window.KAI_SVGS['success'] || '') 
-                : (window.KAI_SVGS['error'] || ''));
+                ? (svgs['success'] || '') 
+                : (svgs['error'] || ''));
         
         let target = targetName || '';
         if (tool === 'run_command' && target.length > 40) {
@@ -415,7 +822,7 @@ class ChatUIController {
         return `
             <div class="tool-call-header">
                 <div class="tool-call-title">
-                    ${prefixSvg}${iconSvg} ${verb} <code>${this.formatter.escapeHtml(target)}</code>
+                    ${prefixSvg}${iconSvg} ${verb} ${target ? `<code>${this.formatter.escapeHtml(target)}</code>` : ''}
                 </div>
                 <i class="codicon codicon-chevron-right tool-chevron"></i>
             </div>
@@ -494,11 +901,11 @@ class ChatUIController {
         if (this.sendBtn) {
             this.sendBtn.disabled = false;
             if (isLoading) {
-                this.sendBtn.innerHTML = window.KAI_SVGS['stop'] || '';
+                this.sendBtn.innerHTML = window.KAI_SVGS['stop'] || '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>';
                 this.sendBtn.title = 'Stop generation';
                 this.showActivityStatus('Processing...');
             } else {
-                this.sendBtn.innerHTML = window.KAI_SVGS['send'] || '';
+                this.sendBtn.innerHTML = window.KAI_SVGS['send'] || '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>';
                 this.sendBtn.title = 'Send message';
                 this.removeActivityStatus();
             }
@@ -530,7 +937,12 @@ class ChatUIController {
                 if (evt.type === 'user') {
                     this.appendMessage('user', evt.text);
                 } else if (evt.type === 'assistant') {
-                    this.appendMessage('assistant', evt.content);
+                    this.appendMessage('assistant', evt.content, evt.mode, {
+                        model: evt.model,
+                        thinking: evt.thinking,
+                        isThinkingCapable: evt.isThinkingCapable,
+                        reasoningEffort: evt.reasoningEffort
+                    });
                 } else if (evt.type === 'file-summary') {
                     this.appendMessage('file-summary', JSON.stringify(evt.files));
                 } else if (evt.type === 'tool') {
@@ -552,7 +964,7 @@ class ChatUIController {
         } else if (messages && messages.length > 0) {
             messages.forEach(msg => {
                 if (msg.role === 'user' || msg.role === 'assistant' || msg.role === 'file-summary') {
-                    this.appendMessage(msg.role, msg.content);
+                    this.appendMessage(msg.role, msg.content, msg.mode);
                 }
             });
         }
@@ -560,11 +972,11 @@ class ChatUIController {
     }
 
     /**
-     * Swaps active content view in the main sidebar container.
+     * Swaps active content view in the main area (Chat, History, or Settings).
      * @param {'chat'|'history'|'settings'} viewName Target view name.
      */
     showView(viewName) {
-        if (this.settingsController) {
+        if (this.settingsController && typeof this.settingsController.hideKeysOverlay === 'function') {
             this.settingsController.hideKeysOverlay();
         }
         if (viewName === 'chat') {

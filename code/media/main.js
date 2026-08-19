@@ -28,8 +28,80 @@
         ipcBridge,
         fileSummaryWidget,
         settingsController,
-        helpModalController
+        helpModalController,
+        modelDropdownController
     );
+
+    // Wire Retry Callback (Rolls back last turn and re-runs previous prompt)
+    chatUIController.onRetry = async (assistantMessageElement) => {
+        if (appState.isWaitingForResponse) return;
+
+        // Find last user prompt
+        const lastUserMsg = [...appState.messages].reverse().find(m => m.role === 'user');
+        if (!lastUserMsg) return;
+
+        // Remove the last assistant message from UI
+        if (assistantMessageElement) {
+            assistantMessageElement.remove();
+        }
+
+        // Pop last assistant message from history & uiEvents
+        if (appState.messages.length > 0 && appState.messages[appState.messages.length - 1].role === 'assistant') {
+            appState.messages.pop();
+        }
+        if (appState.uiEvents.length > 0 && appState.uiEvents[appState.uiEvents.length - 1].type === 'assistant') {
+            appState.uiEvents.pop();
+        }
+
+        chatUIController.resetAssistantStream();
+        chatUIController.setUiLoading(true, appState);
+        saveCurrentChat();
+
+        const modelDetails = modelDropdownController.getSelectedModelDetails();
+        const geminiThinkingLevel = modelDetails.reasoningEffort || settingsController.getGeminiThinkingLevel(modelDetails.model);
+
+        ipcBridge.sendUserPrompt(
+            appState.messages,
+            modelDetails.model,
+            modelDetails.thinking,
+            geminiThinkingLevel,
+            appState.activeMode === 'planning',
+            [],
+            appState.activeMode,
+            appState.currentChatId
+        );
+    };
+
+    // Wire Edit Prompt Callback
+    chatUIController.onEditPrompt = async (userMessageRowElement, editedText) => {
+        if (appState.isWaitingForResponse) return;
+        if (!editedText || !editedText.trim()) return;
+
+        const textToSend = editedText.trim();
+
+        // Add the edited prompt to state & UI
+        appState.addMessage({ role: 'user', content: textToSend });
+        appState.addUiEvent({ type: 'user', text: textToSend });
+        chatUIController.appendMessage('user', textToSend);
+
+        chatUIController.resetAssistantStream();
+        chatUIController.setUiLoading(true, appState);
+        saveCurrentChat();
+
+        const modelDetails = modelDropdownController.getSelectedModelDetails();
+        const geminiThinkingLevel = modelDetails.reasoningEffort || settingsController.getGeminiThinkingLevel(modelDetails.model);
+
+        ipcBridge.sendUserPrompt(
+            appState.messages,
+            modelDetails.model,
+            modelDetails.thinking,
+            geminiThinkingLevel,
+            appState.activeMode === 'planning',
+            [],
+            appState.activeMode,
+            appState.currentChatId
+        );
+    };
 
     // DOM Element References for Input Orchestration
     const messageInput = document.getElementById('message-input');
@@ -38,41 +110,49 @@
     const attachFileBtn = document.getElementById('attach-file-btn');
     const atMentionTriggerBtn = document.getElementById('at-mention-trigger-btn');
     const contextOptionsMenu = document.getElementById('context-options-menu');
-    const planningModeOptionRow = document.getElementById('planning-mode-option-row');
+    const modeOptAgent = document.getElementById('mode-opt-agent');
+    const modeOptAsk = document.getElementById('mode-opt-ask');
+    const modeOptPlanning = document.getElementById('mode-opt-planning');
 
     /**
-     * Dynamically resizes the message input textarea based on content scrollHeight.
+     * Sets active mode in state and highlights the selected mode option in the @ menu.
+     * @param {'agent'|'ask'|'planning'} mode Target mode.
      */
-    function adjustInputHeight() {
-        if (!messageInput) return;
-        messageInput.style.height = 'auto';
-        const MAX_HEIGHT = 180;
-        const newHeight = Math.min(messageInput.scrollHeight, MAX_HEIGHT);
-        messageInput.style.height = `${newHeight}px`;
-        messageInput.style.overflowY = messageInput.scrollHeight > MAX_HEIGHT ? 'auto' : 'hidden';
+    function setActiveMode(mode) {
+        appState.activeMode = mode;
+        appState.isPlanningModeEnabled = (mode === 'planning');
+        localStorage.setItem('kai.activeMode', mode);
+
+        if (modeOptAgent) modeOptAgent.classList.toggle('active', mode === 'agent');
+        if (modeOptAsk) modeOptAsk.classList.toggle('active', mode === 'ask');
+        if (modeOptPlanning) modeOptPlanning.classList.toggle('active', mode === 'planning');
+
+        if (atMentionTriggerBtn) {
+            atMentionTriggerBtn.classList.toggle('active-mode', mode !== 'agent');
+        }
     }
 
-    /**
-     * Initializes the Planning Mode switch toggle inside the @ options menu using ToggleComponent.
-     */
-    if (planningModeOptionRow) {
-        const planningToggleEl = ToggleComponent.create({
-            id: 'planning-mode-toggle-switch',
-            label: window.KAI_I18N?.planningMode || 'Planning Mode',
-            checked: appState.isPlanningModeEnabled,
-            title: window.KAI_I18N?.planningModeDesc || 'Enforce step-by-step planning before execution',
-            onChange: (checked) => {
-                appState.isPlanningModeEnabled = checked;
-                localStorage.setItem('kai.planningMode', checked ? 'true' : 'false');
-                if (atMentionTriggerBtn) {
-                    atMentionTriggerBtn.classList.toggle('active-mode', checked);
+    if (modeOptAgent) modeOptAgent.addEventListener('click', () => { setActiveMode('agent'); if (contextOptionsMenu) contextOptionsMenu.classList.add('hidden'); });
+    if (modeOptAsk) modeOptAsk.addEventListener('click', () => { setActiveMode('ask'); if (contextOptionsMenu) contextOptionsMenu.classList.add('hidden'); });
+    if (modeOptPlanning) modeOptPlanning.addEventListener('click', () => { setActiveMode('planning'); if (contextOptionsMenu) contextOptionsMenu.classList.add('hidden'); });
+
+    // Initialize initial mode from state
+    setActiveMode(appState.activeMode || 'agent');
+
+    // Delegate Proceed button inside plan card: switches mode to agent and executes
+    if (chatUIController.chatContainer) {
+        chatUIController.chatContainer.addEventListener('click', (e) => {
+            const proceedBtn = e.target.closest('.plan-proceed-btn');
+            if (proceedBtn) {
+                if (appState.isWaitingForResponse) return;
+                proceedBtn.disabled = true;
+                setActiveMode('agent');
+                if (messageInput) {
+                    messageInput.value = 'Proceed with the implementation plan.';
                 }
+                sendMessage();
             }
         });
-        planningModeOptionRow.appendChild(planningToggleEl);
-        if (atMentionTriggerBtn && appState.isPlanningModeEnabled) {
-            atMentionTriggerBtn.classList.add('active-mode');
-        }
     }
 
     let isDirty = false;
@@ -152,7 +232,9 @@
             modelDetails.thinking,
             geminiThinkingLevel,
             appState.isPlanningModeEnabled,
-            attachedFilesCopy
+            attachedFilesCopy,
+            appState.activeMode,
+            appState.currentChatId
         );
     }
 
@@ -298,14 +380,27 @@
             : (localStorage.getItem('kai.showThinking') !== 'false');
         const formatted = formatter.formatMarkdown(replyContent, forceThinkingCollapsed, isThinkingChecked);
 
+        const modelDetails = modelDropdownController.getSelectedModelDetails();
+        const effectiveMeta = {
+            model: modelDetails.model,
+            thinking: modelDetails.thinking,
+            reasoningEffort: modelDetails.reasoningEffort,
+            mode: appState.activeMode
+        };
+
         if (chatUIController.currentAssistantMsgElement) {
             if (formatted.trim()) {
                 chatUIController.currentAssistantMsgElement.querySelector('.message-content').innerHTML = formatted;
+                // Append action bar if not present
+                const existingActions = chatUIController.currentAssistantMsgElement.querySelector('.message-actions');
+                if (!existingActions) {
+                    chatUIController.currentAssistantMsgElement.appendChild(chatUIController.createAssistantActionBar(appState.activeMode, effectiveMeta));
+                }
             } else {
                 chatUIController.currentAssistantMsgElement.remove();
             }
         } else if (formatted.trim()) {
-            chatUIController.appendMessage('assistant', replyContent);
+            chatUIController.appendMessage('assistant', replyContent, appState.activeMode, effectiveMeta);
         }
 
         if (message.fullHistory) {
@@ -317,7 +412,14 @@
         // If assistant content was not already streamed into uiEvents, add it now
         const lastEvt = appState.uiEvents[appState.uiEvents.length - 1];
         if (replyContent && (!lastEvt || lastEvt.type !== 'assistant')) {
-            appState.addUiEvent({ type: 'assistant', content: replyContent });
+            appState.addUiEvent({
+                type: 'assistant',
+                content: replyContent,
+                mode: appState.activeMode,
+                model: effectiveMeta.model,
+                thinking: effectiveMeta.thinking,
+                reasoningEffort: effectiveMeta.reasoningEffort
+            });
         }
 
         if (message.modifiedFiles && message.modifiedFiles.length > 0) {
