@@ -793,6 +793,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                                                 <button type="button" class="chevron-only-btn" id="model-settings-trigger-btn" title="Model Settings">
                                                     <svg class="dropdown-chevron" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                                 </button>
+                                                <div class="model-thinking-indicator" id="model-thinking-indicator"></div>
                                                 <div class="dropdown-menu hidden" id="model-settings-menu"></div>
                                             </div>
                                         </div>

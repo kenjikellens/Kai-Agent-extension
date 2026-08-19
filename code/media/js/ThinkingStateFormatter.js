@@ -202,27 +202,15 @@ class ThinkingStateFormatter {
 
     /**
      * Appends text label and battery SVG icon to flyout option elements in user-specified order.
-     * Order specified by user: Text label first -> Battery SVG icon second.
-     * @param {HTMLElement} element Flyout option button or row element.
-     * @param {string} labelText Option display text.
-     * @param {string|boolean} level Reasoning level string or boolean.
-     * @param {string} [displayStyle] User display preference ('both', 'icon', 'text').
+    /**
+     * Renders clean label text inside flyout option elements.
+     * @param {HTMLElement} element Target container element.
+     * @param {string} labelText Display label text.
      */
-    static renderFlyoutOptionContent(element, labelText, level, displayStyle = null) {
+    static renderFlyoutOptionContent(element, labelText) {
         if (!element) return;
-        const style = displayStyle || localStorage.getItem('kai.thinkingDisplayStyle') || 'both';
-
-        // 1. Text label first
-        if (style === 'text' || style === 'both') {
-            const labelSpan = document.createElement('span');
-            labelSpan.textContent = labelText;
-            element.appendChild(labelSpan);
-        }
-
-        // 2. Battery SVG Icon second
-        if (style === 'icon' || style === 'both') {
-            const batterySvg = DOMUtils.createBatteryIcon(level, 'flyout-battery-icon');
-            element.appendChild(batterySvg);
-        }
+        const labelSpan = document.createElement('span');
+        labelSpan.textContent = labelText;
+        element.appendChild(labelSpan);
     }
 }

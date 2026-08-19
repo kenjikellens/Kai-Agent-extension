@@ -127,25 +127,6 @@ class SettingsController {
         }
 
         // 6. Thinking Display Style Custom Select Dropdown (Icon + Text / Icon Only / Text Only)
-        const styleContainer = document.getElementById('thinking-display-style-container');
-        if (styleContainer && typeof CustomSelectComponent !== 'undefined') {
-            const storedStyle = localStorage.getItem('kai.thinkingDisplayStyle') || 'both';
-            const styleOptions = [
-                { value: 'both', label: i18n.iconAndText || 'Icon + Text' },
-                { value: 'icon', label: i18n.iconOnly || 'Icon Only' },
-                { value: 'text', label: i18n.textOnly || 'Text Only' }
-            ];
-            this.thinkingStyleComponent = new CustomSelectComponent({
-                container: styleContainer,
-                id: 'thinking-display-style-input',
-                options: styleOptions,
-                value: storedStyle,
-                onChange: (selectedStyle) => {
-                    localStorage.setItem('kai.thinkingDisplayStyle', selectedStyle);
-                    window.dispatchEvent(new CustomEvent('kaiThinkingStyleChanged', { detail: { style: selectedStyle } }));
-                }
-            });
-        }
     }
 
     /**
