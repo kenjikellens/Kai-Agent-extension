@@ -1267,11 +1267,10 @@ button:disabled {
   margin: 0;
 }
 
-/* Settings & Help category wrapper - Minimal spacing with uniform subtle border */
+/* Settings & Help category wrapper - Controlled uniformly by parent container gap: 3px */
 .settings-category {
   position: relative;
-  margin-top: 1px;
-  margin-bottom: 1px;
+  margin: 0;
   padding: 4px 8px;
   border: 1px solid var(--app-border-subtle, rgba(255, 255, 255, 0.08));
   border-radius: var(--app-radius-sm, 4px);
@@ -1319,13 +1318,12 @@ button:disabled {
   font-weight: 500;
   letter-spacing: 0.5px;
   color: var(--app-muted);
-  transition: color 0.15s ease, font-weight 0.15s ease;
+  transition: color 0.15s ease;
 }
 
-/* When category is open/expanded: title is lighter (whiter) and bolder (700) */
+/* When category is open/expanded: title is lighter (whiter) without bolding */
 .settings-category:not(.collapsed) .category-title {
   color: var(--app-fg, #ffffff);
-  font-weight: 700;
 }
 
 .category-header-btn:hover .category-title {
@@ -2001,8 +1999,8 @@ button:disabled {
 .settings-content-panel {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 4px;
+  gap: 3px;
+  padding: 10px 14px 16px 14px;
 }
 
 .setting-row {
@@ -2434,7 +2432,7 @@ details[open]>summary>.custom-chevron {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .help-desc-text {
