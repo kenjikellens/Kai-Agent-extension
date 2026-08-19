@@ -140,68 +140,41 @@ export class LMStudioReasoningEngine {
 
         // 3. Qwen & GLM Architecture (e.g. Qwen 3.8 27B, Qwen 3.6, Qwen 3.5, Qwen 3 Coder, GLM 4.7 Flash, QwQ)
         if (lower.includes('qwen') || lower.includes('glm') || lower.includes('qwq')) {
-            requestParams.reasoning_effort = thinking ? effortVal : 'none';
-            if (thinking) {
-                requestParams.thinking = true;
-                requestParams.enable_thinking = true;
-                requestParams.chat_template_kwargs = { enable_thinking: true };
-            } else {
-                requestParams.thinking = false;
-                requestParams.enable_thinking = false;
-                requestParams.chat_template_kwargs = { enable_thinking: false };
-            }
+            requestParams.reasoning_effort = effortVal;
+            requestParams.thinking = thinking;
+            requestParams.enable_thinking = thinking;
+            requestParams.chat_template_kwargs = { enable_thinking: thinking };
             return;
         }
 
         // 4. Mistral & Codestral Architecture (e.g. Magistral, Codestral, Mistral Small 3)
         if (lower.includes('mistral') || lower.includes('codestral') || lower.includes('magistral') || lower.includes('ministral')) {
-            if (thinking) {
-                requestParams.reasoning_effort = effortVal;
-            }
+            requestParams.reasoning_effort = effortVal;
             return;
         }
 
         // 5. Gemma & Bonsai Architecture (e.g. Gemma 4 E4B, Gemma 4 E2B, Gemma 4 12B/31B, Bonsai 27B)
         if (lower.includes('gemma') || lower.includes('bonsai')) {
-            if (thinking) {
-                requestParams.thinking = true;
-                requestParams.enable_thinking = true;
-                requestParams.chat_template_kwargs = { enable_thinking: true };
-            } else {
-                requestParams.thinking = false;
-                requestParams.enable_thinking = false;
-                requestParams.chat_template_kwargs = { enable_thinking: false };
-                requestParams.reasoning_effort = 'none';
-            }
+            requestParams.thinking = thinking;
+            requestParams.enable_thinking = thinking;
+            requestParams.chat_template_kwargs = { enable_thinking: thinking };
             return;
         }
 
         // 6. DeepSeek-R1 and General Thinking Models (e.g. DeepSeek-R1 Distill)
         if (lower.includes('deepseek') || lower.includes('r1') || lower.includes('thinking') || lower.includes('reasoning')) {
             requestParams.reasoning_effort = effortVal;
-            if (thinking) {
-                requestParams.thinking = true;
-                requestParams.enable_thinking = true;
-                requestParams.chat_template_kwargs = { enable_thinking: true };
-            } else {
-                requestParams.thinking = false;
-                requestParams.enable_thinking = false;
-                requestParams.chat_template_kwargs = { enable_thinking: false };
-            }
+            requestParams.thinking = thinking;
+            requestParams.enable_thinking = thinking;
+            requestParams.chat_template_kwargs = { enable_thinking: thinking };
             return;
         }
 
         // 7. Generic Fallback for unspecified local models
         requestParams.reasoning_effort = effortVal;
-        if (thinking) {
-            requestParams.thinking = true;
-            requestParams.enable_thinking = true;
-            requestParams.chat_template_kwargs = { enable_thinking: true };
-        } else {
-            requestParams.thinking = false;
-            requestParams.enable_thinking = false;
-            requestParams.chat_template_kwargs = { enable_thinking: false };
-        }
+        requestParams.thinking = thinking;
+        requestParams.enable_thinking = thinking;
+        requestParams.chat_template_kwargs = { enable_thinking: thinking };
     }
 
     /**
@@ -233,7 +206,7 @@ export class LMStudioReasoningEngine {
                     };
                 }
             } else if (field.type === 'select') {
-                requestParams[field.variable] = thinking ? (reasoningEffort || field.defaultValue || 'xhigh') : 'none';
+                requestParams[field.variable] = reasoningEffort || field.defaultValue || 'xhigh';
             }
         }
 

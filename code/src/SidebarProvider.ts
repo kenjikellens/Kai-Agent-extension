@@ -786,6 +786,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                                                     <!-- Dynamically populated with model option buttons -->
                                                 </div>
                                             </div>
+
+                                            <!-- Dynamic Model Capabilities Toolbar (Think Toggle & Reasoning Effort Dropdown) -->
+                                            <div id="model-capabilities-toolbar" class="model-capabilities-toolbar"></div>
                                         </div>
                                         <div class="toolbar-right">
                                             <!--
