@@ -1267,23 +1267,17 @@ button:disabled {
   margin: 0;
 }
 
-/* Settings & Help category wrapper - Clean compact spacing with permanent subtle border */
+/* Settings & Help category wrapper - Minimal spacing with uniform subtle border */
 .settings-category {
   position: relative;
-  margin-top: 2px;
-  margin-bottom: 2px;
+  margin-top: 1px;
+  margin-bottom: 1px;
   padding: 4px 8px;
   border: 1px solid var(--app-border-subtle, rgba(255, 255, 255, 0.08));
   border-radius: var(--app-radius-sm, 4px);
   background: transparent;
   box-sizing: border-box;
   width: 100%;
-  transition: border-color 0.15s ease;
-}
-
-/* Light highlight border when category is open */
-.settings-category:not(.collapsed) {
-  border-color: var(--app-border-strong, rgba(255, 255, 255, 0.15));
 }
 
 .settings-category.has-open-select {
@@ -1318,13 +1312,24 @@ button:disabled {
   color: var(--app-fg);
 }
 
-/* Category Title - Uppercase, muted grey, refined larger text size */
+/* Category Title - Uppercase, muted grey */
 .category-title {
   text-transform: uppercase;
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.5px;
   color: var(--app-muted);
+  transition: color 0.15s ease, font-weight 0.15s ease;
+}
+
+/* When category is open/expanded: title is lighter (whiter) and bolder (700) */
+.settings-category:not(.collapsed) .category-title {
+  color: var(--app-fg, #ffffff);
+  font-weight: 700;
+}
+
+.category-header-btn:hover .category-title {
+  color: var(--app-fg, #ffffff);
 }
 
 /* Setting Item Label & Switch Label - Thinner font weight (400) and soft lighter color */
