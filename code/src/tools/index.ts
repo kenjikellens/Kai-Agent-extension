@@ -12,6 +12,7 @@ import { SymbolSearchTool } from './symbol_search';
 import { FetchUrlTool } from './fetch_url';
 import { DeleteItemTool } from './delete_item';
 import { WebSearchTool } from './web_search';
+import { UtilityToolsTool } from './utility_tools';
 
 export * from './Tool';
 export * from './McpProcessBridge';
@@ -28,6 +29,7 @@ export * from './symbol_search';
 export * from './fetch_url';
 export * from './delete_item';
 export * from './web_search';
+export * from './utility_tools';
 
 /**
  * Returns a list of all instanced tools available for execution.
@@ -47,6 +49,7 @@ export function getRegisteredTools(): Tool[] {
         new SymbolSearchTool(),
         new FetchUrlTool(),
         new DeleteItemTool(),
-        new WebSearchTool()
+        new WebSearchTool(),
+        new UtilityToolsTool()
     ];
 }
