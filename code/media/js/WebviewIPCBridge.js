@@ -184,6 +184,14 @@ class WebviewIPCBridge {
     }
 
     /**
+     * Unloads previous local models and loads the specified LM Studio model dynamically.
+     * @param {string} modelId Identifier of the LM Studio model to load.
+     */
+    switchLMStudioModel(modelId) {
+        this.postMessage({ type: 'switchLMStudioModel', model: modelId });
+    }
+
+    /**
      * Requests Extension Host to open an external URL in default browser.
      * @param {string} url External URL string.
      */

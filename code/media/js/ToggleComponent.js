@@ -28,6 +28,7 @@ class ToggleComponent {
 
         const track = document.createElement('span');
         track.className = 'slider-track';
+        track.setAttribute('aria-checked', String(input.checked));
 
         container.appendChild(input);
         container.appendChild(track);
@@ -39,11 +40,18 @@ class ToggleComponent {
             container.appendChild(labelSpan);
         }
 
-        if (typeof onChange === 'function') {
-            input.addEventListener('change', (e) => {
+        input.addEventListener('change', (e) => {
+            track.setAttribute('aria-checked', String(input.checked));
+            if (typeof onChange === 'function') {
                 onChange(input.checked, e);
-            });
-        }
+            }
+        });
+
+        track.addEventListener('click', (e) => {
+            e.stopPropagation();
+            input.checked = !input.checked;
+            input.dispatchEvent(new Event('change'));
+        });
 
         return container;
     }

@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
+import * as child_process from 'child_process';
 import { AgentExecutor } from './AgentExecutor';
 import { LMStudioClient, FREE_PROVIDERS } from './LMStudioClient';
 import { LMStudioManifestParser } from './providers/LMStudioManifestParser';
@@ -98,6 +100,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                 }
                 case 'checkConnection': {
                     await this._handleCheckConnection();
+                    break;
+                }
+                case 'switchLMStudioModel': {
+                    await this._handleSwitchLMStudioModel(data.model);
                     break;
                 }
                 case 'updateSettings': {
@@ -595,6 +601,38 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
 
     /**
+     * Unloads prior LM Studio models and loads the specified model dynamically in LM Studio.
+     * Invokes the lms command line tool to manage VRAM memory and refreshes connection state.
+     * @param modelId Identifier of the LM Studio model to load.
+     */
+    private async _handleSwitchLMStudioModel(modelId: string) {
+        if (!modelId || modelId === 'local-model' || modelId.toLowerCase().startsWith('gemini')) {
+            return;
+        }
+
+        const homeDir = os.homedir();
+        const candidates = [
+            path.join(homeDir, '.cache', 'lm-studio', 'bin', process.platform === 'win32' ? 'lms.exe' : 'lms'),
+            path.join(homeDir, '.lmstudio', 'bin', process.platform === 'win32' ? 'lms.exe' : 'lms')
+        ];
+
+        const lmsBin = candidates.find(c => fs.existsSync(c));
+        if (lmsBin) {
+            try {
+                // Unload all previous models to free up GPU memory
+                await new Promise<void>((resolve) => {
+                    child_process.execFile(lmsBin, ['unload', '--all'], { timeout: 15000 }, () => resolve());
+                });
+                // Load newly selected model
+                await new Promise<void>((resolve) => {
+                    child_process.execFile(lmsBin, ['load', modelId, '-y'], { timeout: 30000 }, () => resolve());
+                });
+            } catch {}
+        }
+        await this._handleCheckConnection();
+    }
+
+    /**
      * Loads SVG icons from the media/svg directory.
      * @returns Map of icon names to SVG strings.
      */
@@ -683,7 +721,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                             </button>
                             <button id="settings-btn" class="icon-btn-header" title="${translations.settings}">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                             </button>
                         </div>
                     </div>
