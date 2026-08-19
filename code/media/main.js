@@ -213,7 +213,7 @@
 
         if (messageInput) {
             messageInput.value = '';
-            adjustInputHeight();
+            autoResizeInput();
         }
         appState.selectedCodeContext = '';
 
@@ -286,8 +286,20 @@
         });
     }
 
+    /**
+     * Auto-resizes the input textarea as user types, up to MAX_HEIGHT.
+     */
+    function autoResizeInput() {
+        if (!messageInput) return;
+        messageInput.style.height = 'auto';
+        const MAX_HEIGHT = 200;
+        const newHeight = Math.min(messageInput.scrollHeight, MAX_HEIGHT);
+        messageInput.style.height = `${newHeight}px`;
+        messageInput.style.overflowY = messageInput.scrollHeight > MAX_HEIGHT ? 'auto' : 'hidden';
+    }
+
     if (messageInput) {
-        messageInput.addEventListener('input', adjustInputHeight);
+        messageInput.addEventListener('input', autoResizeInput);
         messageInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();

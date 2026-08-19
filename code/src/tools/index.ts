@@ -32,10 +32,30 @@ export * from './web_search';
 export * from './utility_tools';
 
 /**
- * Returns a list of all instanced tools available for execution.
- * @returns An array of Tool instances.
+ * Returns an array of available tools filtered by active mode.
+ * @param mode The active mode ('agent' | 'planning' | 'ask').
+ * @returns Array of Tool instances.
  */
-export function getRegisteredTools(): Tool[] {
+export function getRegisteredTools(mode: 'agent' | 'planning' | 'ask' | string = 'agent'): Tool[] {
+    const utilityTool = new UtilityToolsTool();
+    const fetchUrlTool = new FetchUrlTool();
+    const webSearchTool = new WebSearchTool();
+
+    // In Ask mode, supply read-only inspection tools + web & utility tools
+    if (mode === 'ask') {
+        return [
+            new ReadFileTool(),
+            new ListDirTool(),
+            new GrepSearchTool(),
+            new GetDiagnosticsTool(),
+            new SymbolSearchTool(),
+            utilityTool,
+            fetchUrlTool,
+            webSearchTool
+        ];
+    }
+
+    // In Agent & Planning mode, supply the full suite of developer tools
     return [
         new ReadFileTool(),
         new WriteFileTool(),
@@ -50,6 +70,6 @@ export function getRegisteredTools(): Tool[] {
         new FetchUrlTool(),
         new DeleteItemTool(),
         new WebSearchTool(),
-        new UtilityToolsTool()
+        utilityTool
     ];
 }

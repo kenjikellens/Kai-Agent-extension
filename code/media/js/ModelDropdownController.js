@@ -407,7 +407,7 @@ class ModelDropdownController {
                                     type: 'select',
                                     variable: 'reasoning_effort',
                                     options: [
-                                        { label: 'X-High', value: 'xhigh' },
+                                        { label: 'xhigh', value: 'xhigh' },
                                         { label: 'Medium', value: 'medium' },
                                         { label: 'Low', value: 'low' }
                                     ]
@@ -415,107 +415,121 @@ class ModelDropdownController {
                             ];
                         }
 
-                        let toggleEl = null;
+                        // Separate boolean toggle and select fields
+                        const selectField = fields.find(f => f.type === 'select' && Array.isArray(f.options) && f.options.length > 0);
+                        const booleanField = fields.find(f => f.type === 'boolean');
 
-                        fields.forEach(field => {
-                            if (field.type === 'boolean') {
-                                const flyoutRow = document.createElement('div');
-                                flyoutRow.className = 'dropdown-item flyout-option';
-                                flyoutRow.style.width = 'calc(100% - 4px)';
-                                flyoutRow.style.justifyContent = 'space-between';
-                                flyoutRow.style.gap = '12px';
+                        // 1. Render Select options FIRST (xhigh, Medium, Low)
+                        if (selectField) {
+                            const cleanOptions = selectField.options.filter(o => o.value !== 'off' && o.value !== 'none');
+                            cleanOptions.forEach(opt => {
+                                const flyoutOpt = document.createElement('button');
+                                flyoutOpt.type = 'button';
+                                const isSelected = opt.value === currentLmReasoningLevel;
+                                flyoutOpt.className = `dropdown-item flyout-option ${isSelected ? 'selected' : ''}`;
+                                flyoutOpt.setAttribute('role', 'button');
+                                
+                                const formatOptLabel = (v, l) => {
+                                    if (v === 'xhigh' || l === 'xhigh' || l === 'Extra High' || l === 'X-High') return 'xhigh';
+                                    if (v === 'high' || l === 'high') return 'High';
+                                    if (v === 'medium' || l === 'medium') return 'Medium';
+                                    if (v === 'low' || l === 'low') return 'Low';
+                                    return l || v;
+                                };
+                                const optLabel = formatOptLabel(opt.value, opt.label);
+                                flyoutOpt.setAttribute('aria-label', `Set ${selectField.displayName} to ${optLabel}`);
+                                
+                                ThinkingStateFormatter.renderFlyoutOptionContent(flyoutOpt, optLabel, opt.value);
 
-                                const leftWrapper = document.createElement('div');
-                                leftWrapper.style.display = 'inline-flex';
-                                leftWrapper.style.alignItems = 'center';
-                                leftWrapper.style.gap = '6px';
-
-                                ThinkingStateFormatter.renderFlyoutOptionContent(leftWrapper, 'Thinking', isLmThinkingOn);
-
-                                toggleEl = ToggleComponent.create({
-                                    id: `lm-thinking-toggle-${itemData.rawModel.replace(/[^a-zA-Z0-9_-]/g, '_')}`,
-                                    checked: isLmThinkingOn,
-                                    title: 'Enable thinking process for this model',
-                                    onChange: (checked) => {
-                                        localStorage.setItem(`kai.lmStudioThinking.${itemData.rawModel}`, checked ? 'true' : 'false');
-                                        this.setSelectedModel(this.selectedModelValue);
-                                        if (this.onSelect && this.selectedModelValue === itemData.value) {
-                                            this.onSelect(itemData.value);
-                                        }
-                                    }
-                                });
-
-                                flyoutRow.appendChild(leftWrapper);
-                                flyoutRow.appendChild(toggleEl);
-
-                                flyoutRow.addEventListener('click', (e) => {
+                                if (isSelected) {
+                                    const checkSvg = DOMUtils.createCheckIcon('check-icon');
+                                    flyoutOpt.appendChild(checkSvg);
+                                }
+                                
+                                const handleFlyoutSelect = (e) => {
                                     e.stopPropagation();
-                                    const checkbox = toggleEl.querySelector('input[type="checkbox"]');
-                                    if (checkbox && e.target !== checkbox) {
-                                        checkbox.checked = !checkbox.checked;
-                                        checkbox.dispatchEvent(new Event('change'));
-                                    }
-                                });
+                                    localStorage.setItem(`kai.lmStudioReasoningLevel.${itemData.rawModel}`, opt.value);
+                                    localStorage.setItem('kai.lmStudioReasoningLevel', opt.value);
 
-                                flyoutInner.appendChild(flyoutRow);
-                            } else if (field.type === 'select' && Array.isArray(field.options) && field.options.length > 0) {
-                                const divider = document.createElement('div');
-                                divider.className = 'flyout-divider';
-                                flyoutInner.appendChild(divider);
+                                    this.selectedModelValue = itemData.value;
+                                    localStorage.setItem('kai.selectedModel', itemData.value);
 
-                                // Filter out off/none if present in options
-                                const cleanOptions = field.options.filter(o => o.value !== 'off' && o.value !== 'none');
-
-                                cleanOptions.forEach(opt => {
-                                    const flyoutOpt = document.createElement('button');
-                                    flyoutOpt.type = 'button';
-                                    const isSelected = opt.value === currentLmReasoningLevel;
-                                    flyoutOpt.className = `dropdown-item flyout-option ${isSelected ? 'selected' : ''}`;
-                                    flyoutOpt.setAttribute('role', 'button');
-                                    flyoutOpt.setAttribute('aria-label', `Set ${field.displayName} to ${opt.label}`);
-                                    
-                                    ThinkingStateFormatter.renderFlyoutOptionContent(flyoutOpt, opt.label, opt.value);
-
-                                    if (isSelected) {
-                                        const checkSvg = DOMUtils.createCheckIcon('check-icon');
-                                        flyoutOpt.appendChild(checkSvg);
-                                    }
-                                    
-                                    const handleFlyoutSelect = (e) => {
-                                        e.stopPropagation();
-                                        localStorage.setItem(`kai.lmStudioReasoningLevel.${itemData.rawModel}`, opt.value);
-                                        localStorage.setItem('kai.lmStudioReasoningLevel', opt.value);
-
-                                        this.selectedModelValue = itemData.value;
-                                        localStorage.setItem('kai.selectedModel', itemData.value);
-
-                                        flyoutInner.querySelectorAll('.flyout-option').forEach(optionEl => {
-                                            if (optionEl.tagName === 'BUTTON') {
-                                                optionEl.classList.remove('selected');
-                                                const oldCheck = optionEl.querySelector('.check-icon');
-                                                if (oldCheck) oldCheck.remove();
-                                            }
-                                        });
-                                        flyoutOpt.classList.add('selected');
-                                        const checkSvg = DOMUtils.createCheckIcon('check-icon');
-                                        flyoutOpt.appendChild(checkSvg);
-
-                                        this.setSelectedModel(itemData.value);
-
-                                        this.closeActiveFlyoutImmediately();
-                                        if (this.dropdownOptionsMenu) {
-                                            this.dropdownOptionsMenu.classList.add('hidden');
+                                    flyoutInner.querySelectorAll('.flyout-option').forEach(optionEl => {
+                                        if (optionEl.tagName === 'BUTTON') {
+                                            optionEl.classList.remove('selected');
+                                            const oldCheck = optionEl.querySelector('.check-icon');
+                                            if (oldCheck) oldCheck.remove();
                                         }
-                                        if (this.onSelect) {
-                                            this.onSelect(itemData.value);
-                                        }
-                                    };
+                                    });
+                                    flyoutOpt.classList.add('selected');
+                                    const checkSvg = DOMUtils.createCheckIcon('check-icon');
+                                    flyoutOpt.appendChild(checkSvg);
 
-                                    flyoutOpt.addEventListener('click', handleFlyoutSelect);
-                                    flyoutInner.appendChild(flyoutOpt);
-                                });
-                            }
-                        });
+                                    this.setSelectedModel(itemData.value);
+
+                                    this.closeActiveFlyoutImmediately();
+                                    if (this.dropdownOptionsMenu) {
+                                        this.dropdownOptionsMenu.classList.add('hidden');
+                                    }
+                                    if (this.onSelect) {
+                                        this.onSelect(itemData.value);
+                                    }
+                                };
+
+                                flyoutOpt.addEventListener('click', handleFlyoutSelect);
+                                flyoutInner.appendChild(flyoutOpt);
+                            });
+                        }
+
+                        // 2. Render Divider between Select and Toggle (if both exist)
+                        if (selectField && booleanField) {
+                            const divider = document.createElement('div');
+                            divider.className = 'flyout-divider';
+                            flyoutInner.appendChild(divider);
+                        }
+
+                        // 3. Render Boolean Toggle at the bottom (Thinking [toggle])
+                        if (booleanField) {
+                            const flyoutRow = document.createElement('div');
+                            flyoutRow.className = 'dropdown-item flyout-option';
+                            flyoutRow.style.width = 'calc(100% - 4px)';
+                            flyoutRow.style.justifyContent = 'space-between';
+                            flyoutRow.style.gap = '12px';
+
+                            const leftWrapper = document.createElement('div');
+                            leftWrapper.style.display = 'inline-flex';
+                            leftWrapper.style.alignItems = 'center';
+                            leftWrapper.style.gap = '6px';
+
+                            ThinkingStateFormatter.renderFlyoutOptionContent(leftWrapper, 'Thinking', isLmThinkingOn);
+
+                            const toggleEl = ToggleComponent.create({
+                                id: `lm-thinking-toggle-${itemData.rawModel.replace(/[^a-zA-Z0-9_-]/g, '_')}`,
+                                checked: isLmThinkingOn,
+                                title: 'Enable thinking process for this model',
+                                onChange: (checked) => {
+                                    localStorage.setItem(`kai.lmStudioThinking.${itemData.rawModel}`, checked ? 'true' : 'false');
+                                    this.setSelectedModel(this.selectedModelValue);
+                                    if (this.onSelect && this.selectedModelValue === itemData.value) {
+                                        this.onSelect(itemData.value);
+                                    }
+                                }
+                            });
+
+                            flyoutRow.appendChild(leftWrapper);
+                            flyoutRow.appendChild(toggleEl);
+
+                            flyoutRow.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                const checkbox = toggleEl.querySelector('input[type="checkbox"]');
+                                if (checkbox && e.target !== checkbox) {
+                                    checkbox.checked = !checkbox.checked;
+                                    checkbox.dispatchEvent(new Event('change'));
+                                }
+                            });
+
+                            flyoutInner.appendChild(flyoutRow);
+                        }
                     }
 
                     flyoutMenu.appendChild(flyoutInner);
@@ -706,8 +720,12 @@ class ModelDropdownController {
         this.dropdownOptionsMenu.innerHTML = '';
 
         const i18n = window.KAI_I18N || {};
-        const lmStudioStatus = message.connected ? (i18n.connected || 'Connected') : (i18n.offline || 'Offline');
-        const lmTitle = `${i18n.lmStudioHeader || 'LM Studio'} (${lmStudioStatus})`;
+        const isConnected = Boolean(message.connected && lmStudioModels.length > 0);
+        const lmStudioStatus = isConnected 
+            ? (i18n.connected || 'Connected') 
+            : (i18n.offline || 'Offline');
+        const headerTitle = i18n.lmStudioHeader || 'LM Studio';
+        const lmTitle = `${headerTitle} (${lmStudioStatus})`;
         const geminiTitle = 'Gemini';
 
         const showGeminiExpanded = this.selectedModelValue && this.selectedModelValue.toLowerCase().startsWith('gemini');

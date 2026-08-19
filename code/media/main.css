@@ -2839,5 +2839,206 @@ details[open]>summary>.custom-chevron {
   color: var(--app-accent, #007acc);
 }
 
+/* ==========================================================================
+   USER MESSAGE ROW & INLINE PROMPT EDITOR
+   ========================================================================== */
+.user-message-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: 90%;
+  align-self: flex-end;
+  margin-bottom: 12px;
+}
 
+.user-message-row.is-editing {
+  width: 90%;
+  max-width: 90%;
+}
 
+.user-message-row .user-message {
+  max-width: 100%;
+  margin-bottom: 0;
+}
+
+.edit-prompt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--app-radius-sm);
+  background: transparent;
+  color: var(--app-muted);
+  border: 0 !important;
+  outline: none;
+  cursor: pointer;
+  opacity: 0;
+  flex-shrink: 0;
+  transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.user-message-row:hover .edit-prompt-btn {
+  opacity: 1;
+}
+
+.edit-prompt-btn:hover {
+  background: var(--app-surface-hover);
+  color: var(--app-fg);
+}
+
+.inline-prompt-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  background: var(--app-input-bg);
+  border: 1px solid var(--app-focus);
+  border-radius: var(--app-radius-md);
+  padding: 8px 10px;
+  box-sizing: border-box;
+}
+
+.inline-prompt-textarea {
+  width: 100%;
+  min-height: 48px;
+  max-height: 200px;
+  background: transparent;
+  color: var(--app-fg);
+  border: none;
+  resize: none;
+  outline: none;
+  font-family: var(--app-font);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+}
+
+.inline-editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.inline-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--app-radius-sm);
+  background: transparent;
+  color: var(--app-muted);
+  border: 0 !important;
+  outline: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.inline-action-btn:hover {
+  background: var(--app-surface-hover);
+  color: var(--app-fg);
+}
+
+.inline-action-btn.inline-send-btn {
+  background: var(--app-accent);
+  color: #ffffff;
+}
+
+.inline-action-btn.inline-send-btn:hover {
+  background: var(--app-accent-hover);
+}
+
+.inline-action-btn.inline-cancel-btn:hover {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.15);
+}
+
+/* ==========================================================================
+   RAW MARKDOWN PRE & ACTION BUTTON STATES
+   ========================================================================== */
+.msg-action-btn.toggle-raw-btn.active {
+  color: var(--app-accent, #38bdf8);
+  background: var(--app-surface-hover);
+}
+
+.raw-markdown-pre {
+  margin: 4px 0;
+  padding: 8px 10px;
+  background: var(--app-code-bg);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-sm);
+  font-family: var(--app-mono, monospace);
+  font-size: 0.78rem;
+  color: var(--app-fg);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* ==========================================================================
+   CODE BLOCK ACTION BUTTONS & COPY FEEDBACK
+   ========================================================================== */
+.code-block-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.download-code-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: var(--app-radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--app-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.download-code-btn:hover {
+  background: var(--app-surface-hover);
+  color: var(--app-fg);
+}
+
+.copy-code-btn.copied {
+  color: #4caf50;
+}
+
+/* -----------------------------
+   Status / activity indicators
+------------------------------ */
+/* Static status indicator dot for model connection state */
+.status-dot {
+  width: 6px;
+  height: 6px;
+  display: inline-block;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* Connected status state indicator - solid green dot */
+.status-dot.status-connected {
+  background: #2ecc71 !important;
+}
+
+/* Disconnected status state indicator - solid red dot */
+.status-dot.status-disconnected {
+  background: #e74c3c !important;
+}
+
+.dropdown-item .status-dot {
+  margin-right: 0;
+  flex-shrink: 0;
+}

@@ -53,9 +53,26 @@ class WebviewIPCBridge {
     _initMessageListener() {
         window.addEventListener('message', (event) => {
             const message = event.data;
-            if (message && message.type && this.listeners.has(message.type)) {
-                const callbacks = this.listeners.get(message.type);
-                callbacks.forEach(cb => cb(message));
+            if (message && message.type) {
+                if (message.type === 'connectionStatus') {
+                    this.postMessage({
+                        type: 'webviewLog',
+                        text: `Webview received connectionStatus: connected=${message.connected}, lmModelsCount=${(message.lmStudioModels || []).length}`
+                    });
+                }
+                if (this.listeners.has(message.type)) {
+                    const callbacks = this.listeners.get(message.type);
+                    callbacks.forEach(cb => {
+                        try {
+                            cb(message);
+                        } catch (err) {
+                            this.postMessage({
+                                type: 'replyError',
+                                message: `Error in listener for ${message.type}: ${err.message || err}\n${err.stack || ''}`
+                            });
+                        }
+                    });
+                }
             }
         });
     }

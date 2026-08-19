@@ -61,4 +61,5 @@ echo   [OK] Update complete in ~1 second!
 echo   Press Ctrl+Shift+P in VS Code -> 'Developer: Reload Window'
 echo ========================================================
 echo.
-timeout /t 3 >nul 2>&1
+timeout /t 2 >nul 2>&1
+exit /b 0

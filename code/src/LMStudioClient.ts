@@ -86,15 +86,16 @@ export class LMStudioClient implements ILLMProvider {
     public async getLMStudioModels(): Promise<string[]> {
         const { hostname, port, pathPrefix } = this.parseServerUrl();
         const urlsToTry = [
-            `http://${hostname}:${port}${pathPrefix}/models`,
-            `http://${hostname === 'localhost' ? '127.0.0.1' : 'localhost'}:${port}${pathPrefix}/models`,
-            `http://${hostname}:${port}/v1/models`,
-            `http://${hostname}:${port}/models`
+            `http://127.0.0.1:${port || 1234}/v1/models`,
+            `http://127.0.0.1:${port || 1234}/models`,
+            `http://localhost:${port || 1234}/v1/models`,
+            `http://localhost:${port || 1234}/models`,
+            `http://${hostname}:${port}${pathPrefix}/models`
         ];
 
         const uniqueUrls = Array.from(new Set(urlsToTry));
 
-        const probePromises = uniqueUrls.map(url => HttpClient.getJson<{ data: any[] }>(url, {}, 800));
+        const probePromises = uniqueUrls.map(url => HttpClient.getJson<{ data: any[] }>(url, {}, 2500));
         const results = await Promise.allSettled(probePromises);
 
         for (const res of results) {
@@ -122,13 +123,14 @@ export class LMStudioClient implements ILLMProvider {
         // 2. Try LM Studio api/v0/models endpoint for models with state === 'loaded'
         const { hostname, port } = this.parseServerUrl();
         const urlsToTry = [
-            `http://${hostname}:${port}/api/v0/models`,
-            `http://${hostname === 'localhost' ? '127.0.0.1' : 'localhost'}:${port}/api/v0/models`
+            `http://127.0.0.1:${port || 1234}/api/v0/models`,
+            `http://localhost:${port || 1234}/api/v0/models`,
+            `http://${hostname}:${port}/api/v0/models`
         ];
 
         for (const url of Array.from(new Set(urlsToTry))) {
             try {
-                const res = await HttpClient.getJson<{ data: any[] }>(url, {}, 800);
+                const res = await HttpClient.getJson<{ data: any[] }>(url, {}, 2500);
                 if (res && Array.isArray(res.data)) {
                     const loadedIds = res.data
                         .filter((m: any) => m && m.state === 'loaded')

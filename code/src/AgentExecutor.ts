@@ -77,6 +77,7 @@ export class AgentExecutor {
             provider.supportsNativeFunctionCalling?.() && provider.chatCompletionStreamWithTools
         );
 
+        this.tools = getRegisteredTools(mode);
         // Find existing system prompt or inject ours at the beginning
         let systemContent = this.getSystemPrompt(useNativeFunctionCalling);
         const now = new Date();

@@ -14,6 +14,8 @@ import { EditorContextProvider } from './EditorContextProvider';
  */
 export class SidebarProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'kai-chat-sidebar';
+    /** Debug output channel for visible logging in VS Code Output panel */
+    private static _outputChannel: vscode.OutputChannel;
     private _view?: vscode.WebviewView;
     private _activeAbortController?: AbortController;
     private _currentStreamingText: string = '';
@@ -29,6 +31,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     constructor(context: vscode.ExtensionContext) {
         this._extensionUri = context.extensionUri;
         this._sessionStore = new SessionStore(context.workspaceState);
+        if (!SidebarProvider._outputChannel) {
+            SidebarProvider._outputChannel = vscode.window.createOutputChannel('Kai');
+        }
     }
 
     /**
@@ -53,6 +58,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
         // Inject the HTML template
         webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+
+        // Run initial connection verification immediately
+        this._handleCheckConnection().catch(err => {
+            SidebarProvider._outputChannel.appendLine(`[ERROR] Initial checkConnection failed: ${err?.message || err}`);
+        });
 
         // Handle webview disposal/close
         webviewView.onDidDispose(() => {
@@ -159,6 +169,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     if (data.url) {
                         vscode.env.openExternal(vscode.Uri.parse(data.url));
                     }
+                    break;
+                }
+                case 'webviewLog': {
+                    SidebarProvider._outputChannel.appendLine(`[WEBVIEW] ${data.text}`);
+                    break;
+                }
+                case 'replyError': {
+                    SidebarProvider._outputChannel.appendLine(`[WEBVIEW ERROR] ${data.message}`);
                     break;
                 }
             }
@@ -280,83 +298,110 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
      */
     private async _handleCheckConnection() {
         if (!this._view) {
+            SidebarProvider._outputChannel.appendLine('[WARN] _handleCheckConnection called but _view is undefined');
             return;
         }
 
-        const config = vscode.workspace.getConfiguration('kai');
-        const serverUrl = config.get<string>('serverUrl') || 'http://localhost:1234/v1';
-        const apiKey = config.get<string>('apiKey') || '';
-        const translations = I18nManager.getTranslations();
-        const activeLang = I18nManager.getActiveLanguage();
+        const log = (msg: string) => SidebarProvider._outputChannel.appendLine(`[KAI] ${msg}`);
 
-        const buildFreeProviders = () => {
-            return FREE_PROVIDERS.map(p => ({
-                name: p.name,
-                configKey: p.configKey,
-                keyHint: p.keyHint,
-                models: p.models,
-                apiKey: (config.get<string>(p.configKey) || '').trim(),
-                connected: false
-            }));
-        };
+        try {
+            log('checkConnection START');
+            const config = vscode.workspace.getConfiguration('kai');
+            const serverUrl = config.get<string>('serverUrl') || 'http://localhost:1234/v1';
+            const apiKey = config.get<string>('apiKey') || '';
+            const translations = I18nManager.getTranslations();
+            const activeLang = I18nManager.getActiveLanguage();
 
-        const client = new LMStudioClient(serverUrl, apiKey);
-        const rawFreeProviders = buildFreeProviders();
+            log(`serverUrl=${serverUrl}`);
 
-        // Perform fast concurrent validation across local server, Gemini, and cloud providers
-        const [lmResult, geminiValidationResult, ...freeValidationResults] = await Promise.allSettled([
-            client.getLMStudioModels(),
-            apiKey ? client.validateGemini(apiKey) : Promise.resolve(false),
-            ...rawFreeProviders.map(p => p.apiKey ? client.validateFreeProvider(p.configKey, p.apiKey) : Promise.resolve(false))
-        ]);
-
-        const lmModels = lmResult.status === 'fulfilled' ? lmResult.value : [];
-        const lmStudioConnected = lmResult.status === 'fulfilled' && lmModels.length > 0;
-        const isGeminiValid = geminiValidationResult.status === 'fulfilled' ? Boolean(geminiValidationResult.value) : false;
-        const geminiModels = await client.getGeminiModels();
-
-        const updatedFreeProviders = rawFreeProviders.map((p, idx) => {
-            const valRes = freeValidationResults[idx];
-            const isConnected = valRes && valRes.status === 'fulfilled' ? Boolean(valRes.value) : false;
-            return {
-                ...p,
-                connected: isConnected
+            const buildFreeProviders = () => {
+                return FREE_PROVIDERS.map(p => ({
+                    name: p.name,
+                    configKey: p.configKey,
+                    keyHint: p.keyHint,
+                    models: p.models,
+                    apiKey: (config.get<string>(p.configKey) || '').trim(),
+                    connected: false
+                }));
             };
-        });
 
-        let loadedModels: string[] = [];
-        if (lmStudioConnected) {
-            loadedModels = await client.getLoadedModels().catch(() => []);
-        } else if (isGeminiValid) {
-            loadedModels = [...geminiModels];
+            const client = new LMStudioClient(serverUrl, apiKey);
+            const rawFreeProviders = buildFreeProviders();
+
+            // Perform fast concurrent validation across local server, Gemini, and cloud providers
+            log('Starting Promise.allSettled for LM/Gemini/Free providers...');
+            const [lmResult, geminiValidationResult, ...freeValidationResults] = await Promise.allSettled([
+                client.getLMStudioModels(),
+                apiKey ? client.validateGemini(apiKey) : Promise.resolve(false),
+                ...rawFreeProviders.map(p => p.apiKey ? client.validateFreeProvider(p.configKey, p.apiKey) : Promise.resolve(false))
+            ]);
+
+            const lmModels = lmResult.status === 'fulfilled' ? lmResult.value : [];
+            const lmStudioConnected = lmResult.status === 'fulfilled' && lmModels.length > 0;
+            const isGeminiValid = geminiValidationResult.status === 'fulfilled' ? Boolean(geminiValidationResult.value) : false;
+            const geminiModels = await client.getGeminiModels();
+
+            log(`lmResult.status=${lmResult.status}, lmModels=[${lmModels.join(', ')}], connected=${lmStudioConnected}`);
+            if (lmResult.status === 'rejected') {
+                log(`lmResult.reason=${(lmResult as PromiseRejectedResult).reason}`);
+            }
+
+            const updatedFreeProviders = rawFreeProviders.map((p, idx) => {
+                const valRes = freeValidationResults[idx];
+                const isConnected = valRes && valRes.status === 'fulfilled' ? Boolean(valRes.value) : false;
+                return {
+                    ...p,
+                    connected: isConnected
+                };
+            });
+
+            let loadedModels: string[] = [];
+            if (lmStudioConnected) {
+                loadedModels = await client.getLoadedModels().catch(() => []);
+                // Fallback: If api/v0/models returned no loaded state but LM Studio is online with models, default loadedModels to all lmModels
+                if (loadedModels.length === 0) {
+                    loadedModels = [...lmModels];
+                }
+            } else if (isGeminiValid) {
+                loadedModels = [...geminiModels];
+            }
+
+            const activeModel = lmModels.length > 0
+                ? lmModels[0]
+                : (isGeminiValid && geminiModels.length > 0 ? geminiModels[0] : 'local-model');
+
+            // 2. Validate LM Studio Cache directory and extract model capabilities
+            const lmStudioCacheDir = config.get<string>('lmStudioCacheDir') || '';
+            const lmStudioCacheStatus = LMStudioManifestParser.validateCache(lmStudioCacheDir);
+            const lmStudioCapabilities = LMStudioManifestParser.parseModelCapabilities(lmStudioCacheDir);
+
+            log(`loadedModels=[${loadedModels.join(', ')}], activeModel=${activeModel}`);
+            log(`Posting connectionStatus to webview: connected=${lmStudioConnected}, models=${lmModels.length}, loaded=${loadedModels.length}`);
+
+            // 3. Post updated model availability and manifest capabilities
+            this._view.webview.postMessage({
+                type: 'connectionStatus',
+                connected: lmStudioConnected,
+                model: activeModel,
+                lmStudioModels: lmModels,
+                geminiModels: geminiModels,
+                loadedModels: loadedModels,
+                freeProviders: updatedFreeProviders,
+                serverUrl: serverUrl,
+                apiKey: apiKey,
+                lmStudioCacheDir: lmStudioCacheDir,
+                lmStudioCacheStatus: lmStudioCacheStatus,
+                lmStudioCapabilities: lmStudioCapabilities,
+                translations: translations,
+                language: activeLang
+            });
+
+            log('checkConnection DONE');
+        } catch (err: any) {
+            SidebarProvider._outputChannel.appendLine(`[ERROR] _handleCheckConnection crashed: ${err?.message || err}`);
+            SidebarProvider._outputChannel.appendLine(`[ERROR] Stack: ${err?.stack || 'no stack'}`);
+            SidebarProvider._outputChannel.show(true);
         }
-
-        const activeModel = lmModels.length > 0
-            ? lmModels[0]
-            : (isGeminiValid && geminiModels.length > 0 ? geminiModels[0] : 'local-model');
-
-        // 2. Validate LM Studio Cache directory and extract model capabilities
-        const lmStudioCacheDir = config.get<string>('lmStudioCacheDir') || '';
-        const lmStudioCacheStatus = LMStudioManifestParser.validateCache(lmStudioCacheDir);
-        const lmStudioCapabilities = LMStudioManifestParser.parseModelCapabilities(lmStudioCacheDir);
-
-        // 3. Post updated model availability and manifest capabilities
-        this._view.webview.postMessage({
-            type: 'connectionStatus',
-            connected: lmStudioConnected,
-            model: activeModel,
-            lmStudioModels: lmModels,
-            geminiModels: geminiModels,
-            loadedModels: loadedModels,
-            freeProviders: updatedFreeProviders,
-            serverUrl: serverUrl,
-            apiKey: apiKey,
-            lmStudioCacheDir: lmStudioCacheDir,
-            lmStudioCacheStatus: lmStudioCacheStatus,
-            lmStudioCapabilities: lmStudioCapabilities,
-            translations: translations,
-            language: activeLang
-        });
     }
 
     /**
@@ -695,15 +740,15 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                                                     </div>
                                                     <div class="context-modes-list" id="context-mode-selector">
                                                         <button type="button" class="context-mode-item active" id="mode-opt-agent" data-mode="agent" title="Autonomous code editing and tool execution">
-                                                            <span class="mode-icon">${svgs.agent_mode || '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>'}</span>
+                                                            <span class="mode-icon">${svgs.agent_mode || '<svg class="mode-item-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>'}</span>
                                                             <span>Agent</span>
                                                         </button>
                                                         <button type="button" class="context-mode-item" id="mode-opt-ask" data-mode="ask" title="Read-only workspace exploration and Q&A">
-                                                            <span class="mode-icon">${svgs.ask_mode || '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'}</span>
+                                                            <span class="mode-icon">${svgs.ask_mode || '<svg class="mode-item-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>'}</span>
                                                             <span>Ask</span>
                                                         </button>
                                                         <button type="button" class="context-mode-item" id="mode-opt-planning" data-mode="planning" title="Structured plan-first protocol before code edits">
-                                                            <span class="mode-icon">${svgs.plan_mode || '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>'}</span>
+                                                            <span class="mode-icon">${svgs.plan_mode || '<svg class="mode-item-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>'}</span>
                                                             <span>Plan</span>
                                                         </button>
                                                     </div>
