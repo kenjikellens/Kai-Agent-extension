@@ -2424,37 +2424,125 @@ details[open]>summary>.custom-chevron {
 }
 
 .help-modal-body {
-  padding: 14px;
+  padding: 10px 14px 16px 14px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 2px;
 }
 
-.help-section {
-  padding: 10px;
-  background: var(--app-surface-subtle, #252526);
-  border: 1px solid var(--app-border-subtle, #2e2e2e);
-  border-radius: var(--app-radius-md, 6px);
+/* Minimalist Borderless Accordion Item (Matching Settings Structure) */
+.help-accordion-item {
+  position: relative;
+  width: 100%;
+  margin-top: 1px;
+  margin-bottom: 0;
+  border: none !important;
+  background: transparent !important;
+  box-sizing: border-box;
 }
 
-.help-section-title {
+.help-accordion-header {
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 6px;
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: var(--app-accent, #007acc);
-  margin-bottom: 4px;
+  padding: 6px 0;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0;
+  color: var(--app-fg);
+  cursor: pointer;
+  user-select: none;
+  text-align: left;
 }
 
-.help-section-desc {
-  font-size: 0.72rem;
+.help-accordion-header:hover,
+.help-accordion-header:focus-visible {
+  background: transparent !important;
+}
+
+/* Category Title - Uppercase, muted grey, matching Settings */
+.help-accordion-title {
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  color: var(--app-muted, #888888);
+  flex: 1;
+  transition: color 0.15s ease;
+}
+
+.help-accordion-header:hover .help-accordion-title {
+  color: var(--app-fg, #ffffff);
+}
+
+.help-accordion-chevron {
+  color: var(--app-muted, #888888);
+  flex-shrink: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, visibility 0.15s ease, transform 0.2s ease;
+}
+
+.help-accordion-header:hover .help-accordion-chevron,
+.help-accordion-header:focus-visible .help-accordion-chevron {
+  opacity: 1;
+  visibility: visible;
+}
+
+.help-accordion-item:not(.expanded) .help-accordion-chevron {
+  transform: rotate(-90deg);
+}
+
+.help-accordion-item.expanded .help-accordion-chevron {
+  transform: rotate(0deg);
+  opacity: 1;
+  visibility: visible;
+}
+
+.help-accordion-content {
+  display: none;
+  padding: 4px 2px 14px 2px;
+  box-sizing: border-box;
+}
+
+.help-accordion-item.expanded .help-accordion-content {
+  display: block !important;
+}
+
+.help-accordion-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.74rem;
+  color: var(--app-fg, #cccccc);
+  line-height: 1.5;
+}
+
+.help-desc-text {
   color: var(--app-muted, #999999);
+  margin-bottom: 2px;
+  font-size: 0.74rem;
+}
+
+.help-item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.73rem;
   line-height: 1.45;
 }
 
-.help-section-desc code {
+.help-bullet {
+  color: var(--app-muted, #888888);
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
+
+.help-accordion-inner code {
   padding: 1px 4px;
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.08);
@@ -2466,14 +2554,14 @@ details[open]>summary>.custom-chevron {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-top: 6px;
+  margin-top: 2px;
 }
 
 .help-shortcut-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.72rem;
+  font-size: 0.73rem;
 }
 
 .help-shortcut-label {
@@ -2482,15 +2570,16 @@ details[open]>summary>.custom-chevron {
 
 .help-kbd {
   display: inline-block;
-  padding: 2px 6px;
+  padding: 1px 6px;
   font-size: 0.68rem;
   font-family: var(--vscode-editor-font-family, monospace);
   color: var(--app-fg, #cccccc);
-  background: var(--app-surface-strong, #2d2d2d);
-  border: 1px solid var(--app-border-strong, #3c3c3c);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--app-border-subtle, rgba(255, 255, 255, 0.1));
   border-radius: 3px;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
 }
+
+
 
 /* ==========================================================================
    PLANNING MODE IMPLEMENTATION PLAN CARD (.kai-plan-card)

@@ -96,7 +96,7 @@ class HelpModalController {
     }
 
     /**
-     * Formats and injects the localized sections and keyboard shortcuts table.
+     * Formats and injects the comprehensive localized guide sections in a borderless accordion (max 1 open).
      */
     renderHelpContent() {
         const bodyEl = document.getElementById('help-modal-body');
@@ -104,57 +104,126 @@ class HelpModalController {
 
         const i18n = window.KAI_I18N || {};
 
-        bodyEl.innerHTML = `
-            <div class="help-section">
-                <div class="help-section-title">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-                    <span>${i18n.lmStudioHeader || 'LM Studio & Local Models'}</span>
-                </div>
-                <div class="help-section-desc">
-                    Connect to your local LM Studio server (<code>http://localhost:1234/v1</code>) or select a detected model directly from the toolbar dropdown.
-                </div>
-            </div>
-
-            <div class="help-section">
-                <div class="help-section-title">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
-                    <span>${i18n.thinkingToggle || 'Thinking & Reasoning'}</span>
-                </div>
-                <div class="help-section-desc">
-                    Toggle model reasoning effort and choose between collapsible or persistent thought process rendering in the settings.
-                </div>
-            </div>
-
-            <div class="help-section">
-                <div class="help-section-title">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"></circle><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path></svg>
-                    <span>${i18n.planningMode || 'Planning Mode (@)'}</span>
-                </div>
-                <div class="help-section-desc">
-                    Click the <strong>@</strong> icon to enforce step-by-step implementation planning before code modifications begin.
-                </div>
-            </div>
-
-            <div class="help-section">
-                <div class="help-section-title">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="6" y1="8" x2="6" y2="8"></line><line x1="10" y1="8" x2="10" y2="8"></line><line x1="14" y1="8" x2="14" y2="8"></line><line x1="18" y1="8" x2="18" y2="8"></line><line x1="6" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="18" y2="12"></line><line x1="6" y1="16" x2="18" y2="16"></line></svg>
-                    <span>Keyboard Shortcuts</span>
-                </div>
-                <div class="help-shortcuts-grid">
-                    <div class="help-shortcut-row">
-                        <span class="help-shortcut-label">Send message</span>
-                        <kbd class="help-kbd">Enter</kbd>
+        const sections = [
+            {
+                id: 'help-lmstudio',
+                title: i18n.lmStudioHeader || 'LM Studio & Local Models',
+                content: `
+                    <div class="help-desc-text">Kai connects directly to your locally running LM Studio HTTP server for 100% private, offline inference.</div>
+                    <div class="help-item-row"><span class="help-bullet">•</span><div><strong>Server URL:</strong> Defaults to <code>http://localhost:1234/v1</code>. Configurable in Settings.</div></div>
+                    <div class="help-item-row"><span class="help-bullet">•</span><div><strong>Model Auto-Discovery:</strong> All downloaded models in LM Studio are detected automatically via the Model Selector dropdown.</div></div>
+                    <div class="help-item-row"><span class="help-bullet">•</span><div><strong>Jinja Thinking Capabilities:</strong> When an LM Studio model manifest is detected, native Jinja thinking parameters (e.g. <code>enable_thinking</code>, <code>reasoning_effort</code>) are parsed and used automatically.</div></div>
+                `
+            },
+            {
+                id: 'help-modes',
+                title: 'Modes & Capabilities (@ Menu)',
+                content: `
+                    <div class="help-desc-text">Switch agent operation modes dynamically via the <strong>@</strong> button in the prompt toolbar:</div>
+                    <div class="help-item-row"><span class="help-bullet">•</span><div><strong>Agent Mode:</strong> Full autonomous agent with read/write file editing, terminal command execution, grep searching, diagnostics, and multi-file diff application.</div></div>
+                    <div class="help-item-row"><span class="help-bullet">•</span><div><strong>Ask Mode:</strong> Read-only exploration and Q&A mode. Safe for code review and queries; writing or modifying files is strictly disabled.</div></div>
+                    <div class="help-item-row"><span class="help-bullet">•</span><div><strong>Plan Mode:</strong> Enforces a structured, step-by-step implementation plan before modifying any code. Review and approve the plan with the <em>Proceed with Plan</em> button.</div></div>
+                `
+            },
+            {
+                id: 'help-tools',
+                title: 'Agent Tools & Execution',
+                content: `
+                    <div class="help-desc-text">Kai utilizes modular workspace tools to inspect and modify your codebase:</div>
+                    <div class="help-item-row"><span class="help-bullet">•</span><div><strong>File Operations:</strong> <code>read_file</code>, <code>write_file</code>, <code>edit_file</code>, <code>replace_file_content</code>, <code>multi_replace_file_content</code>, and <code>delete_item</code>.</div></div>
+                    <div class="help-item-row"><span class="help-bullet">•</span><div><strong>Code Intelligence:</strong> <code>grep_search</code> for regex/keyword matches across files, <code>list_dir</code> for directory trees, <code>symbol_search</code> for definitions, and <code>get_diagnostics</code> for compiler/linter errors.</div></div>
+                    <div class="help-item-row"><span class="help-bullet">•</span><div><strong>Terminal & Web:</strong> <code>run_command</code> to execute PowerShell/Bash commands safely, <code>web_search</code> for live online lookups, and <code>fetch_url</code> to scrape web pages.</div></div>
+                `
+            },
+            {
+                id: 'help-thinking',
+                title: i18n.thinkingToggle || 'Thinking & Reasoning',
+                content: `
+                    <div class="help-desc-text">Configure deep reasoning and chain-of-thought behavior for supported thinking models:</div>
+                    <div class="help-item-row"><span class="help-bullet">•</span><div><strong>Reasoning Effort:</strong> Choose between <code>xhigh</code>, <code>medium</code>, and <code>low</code> directly from the model flyout menu.</div></div>
+                    <div class="help-item-row"><span class="help-bullet">•</span><div><strong>Thinking Toggle:</strong> Enable or disable thinking blocks with the toggle switch in the model flyout.</div></div>
+                    <div class="help-item-row"><span class="help-bullet">•</span><div><strong>Display Preferences:</strong> In Settings, configure whether to keep reasoning thoughts expanded during and after generation, or collapse them cleanly into compact summary blocks.</div></div>
+                `
+            },
+            {
+                id: 'help-providers',
+                title: 'External AI Providers & API Keys',
+                content: `
+                    <div class="help-desc-text">Access cloud models alongside local LM Studio models with seamless fallback:</div>
+                    <div class="help-item-row"><span class="help-bullet">•</span><div><strong>Supported Providers:</strong> Google Gemini, Mistral AI, Cohere, Cerebras, Groq, Together AI, OpenRouter, and more.</div></div>
+                    <div class="help-item-row"><span class="help-bullet">•</span><div><strong>Global Key Storage:</strong> All API keys are securely saved globally in your user configuration profile. No <code>.env</code> files are ever created in your project folders.</div></div>
+                    <div class="help-item-row"><span class="help-bullet">•</span><div><strong>Status Dots:</strong> Green dots in the Model Selector indicate an active, validated connection. Red dots mean an API key is missing or the server is unreachable.</div></div>
+                `
+            },
+            {
+                id: 'help-context',
+                title: 'Context & File Attachments',
+                content: `
+                    <div class="help-desc-text">Add rich context to your prompts easily:</div>
+                    <div class="help-item-row"><span class="help-bullet">•</span><div><strong>File Upload (+):</strong> Click the <strong>+</strong> button on the input bar to attach workspace files or images directly to your prompt.</div></div>
+                    <div class="help-item-row"><span class="help-bullet">•</span><div><strong>Editor Selection:</strong> Highlight code in any open editor file to automatically send code context into the Kai chat window.</div></div>
+                    <div class="help-item-row"><span class="help-bullet">•</span><div><strong>File Summaries:</strong> Attached files are indexed and summarized inline for high token efficiency.</div></div>
+                `
+            },
+            {
+                id: 'help-shortcuts',
+                title: 'Keyboard Shortcuts',
+                content: `
+                    <div class="help-shortcuts-grid">
+                        <div class="help-shortcut-row">
+                            <span class="help-shortcut-label">Send prompt / execute</span>
+                            <kbd class="help-kbd">Enter</kbd>
+                        </div>
+                        <div class="help-shortcut-row">
+                            <span class="help-shortcut-label">New line in prompt</span>
+                            <kbd class="help-kbd">Shift + Enter</kbd>
+                        </div>
+                        <div class="help-shortcut-row">
+                            <span class="help-shortcut-label">Close help modal / flyout</span>
+                            <kbd class="help-kbd">Esc</kbd>
+                        </div>
                     </div>
-                    <div class="help-shortcut-row">
-                        <span class="help-shortcut-label">New line</span>
-                        <kbd class="help-kbd">Shift + Enter</kbd>
-                    </div>
-                    <div class="help-shortcut-row">
-                        <span class="help-shortcut-label">Inline edit selection</span>
-                        <kbd class="help-kbd">Ctrl + Alt + K</kbd>
-                    </div>
-                </div>
-            </div>
-        `;
+                `
+            }
+        ];
+
+        bodyEl.innerHTML = '';
+
+        sections.forEach((sec, idx) => {
+            const itemEl = document.createElement('div');
+            // First item expanded by default
+            itemEl.className = `help-accordion-item ${idx === 0 ? 'expanded' : ''}`;
+            itemEl.dataset.sectionId = sec.id;
+
+            const headerBtn = document.createElement('button');
+            headerBtn.type = 'button';
+            headerBtn.className = 'help-accordion-header';
+            headerBtn.innerHTML = `
+                <span class="help-accordion-title">${sec.title}</span>
+                <svg class="help-accordion-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            `;
+
+            const contentEl = document.createElement('div');
+            contentEl.className = 'help-accordion-content';
+            contentEl.innerHTML = `<div class="help-accordion-inner">${sec.content}</div>`;
+
+            headerBtn.addEventListener('click', () => {
+                const wasExpanded = itemEl.classList.contains('expanded');
+
+                // Single-accordion rule: close all other items first
+                bodyEl.querySelectorAll('.help-accordion-item').forEach(el => {
+                    el.classList.remove('expanded');
+                });
+
+                // Toggle target item
+                if (!wasExpanded) {
+                    itemEl.classList.add('expanded');
+                }
+            });
+
+            itemEl.appendChild(headerBtn);
+            itemEl.appendChild(contentEl);
+            bodyEl.appendChild(itemEl);
+        });
     }
 }
