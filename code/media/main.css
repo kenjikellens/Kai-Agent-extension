@@ -1025,7 +1025,7 @@ button:disabled {
   flex-shrink: 0;
 }
 
-/* Options menu container for the Model Selector Dropdown - Flush edges with 0 padding */
+/* Options menu container for the Model Selector Dropdown - Flush 0-padding container with 12px border radius */
 .dropdown-menu {
   position: absolute;
   left: 0;
@@ -1038,9 +1038,9 @@ button:disabled {
   box-sizing: border-box;
   background: var(--app-dropdown-bg);
   border: 1px solid var(--app-border-strong);
-  border-radius: var(--app-radius-md);
+  border-radius: 12px;
   box-shadow: var(--app-dropdown-shadow);
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* Accordion provider group within the Model Selector Dropdown */
@@ -1113,14 +1113,14 @@ button:disabled {
   gap: 0;
 }
 
-/* Unified button option item for ALL dropdowns (Model Selector & Thinking Dropdown) - Flush layout with rounded corners */
+/* Unified button option item for ALL dropdowns (Model Selector & Thinking Dropdown) - Pill rounded buttons with flush edges */
 .dropdown-item,
 .flyout-option {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 6px;
-  padding: 5px 10px;
+  padding: 5px 12px;
   margin: 0;
   overflow: visible;
   white-space: nowrap;
@@ -1132,7 +1132,7 @@ button:disabled {
   cursor: pointer;
   user-select: none;
   border: 1px solid transparent;
-  border-radius: var(--app-radius-sm, 4px);
+  border-radius: 999px;
   outline: none;
   width: 100%;
   text-align: left;
@@ -1140,14 +1140,13 @@ button:disabled {
   transition: border-color 0.15s ease, color 0.15s ease;
 }
 
-/* Hover effect: 1px gray border without background fill */
+/* Hover effect: 1px blue border (matching input field focus) */
 .dropdown-item:hover,
 .dropdown-item:focus-visible,
 .flyout-option:hover,
 .flyout-option:focus-visible {
   color: var(--app-fg);
-  background: transparent;
-  border-color: var(--app-border-strong, #444444);
+  border-color: var(--app-focus, #007acc);
 }
 
 /* Selected item state for dropdown options */
@@ -1155,7 +1154,17 @@ button:disabled {
 .flyout-option.selected {
   color: var(--app-fg);
   background: var(--app-surface-strong);
+  border-radius: 999px;
   font-weight: 600;
+}
+
+/* Selected item on hover: preserves selected background and gets blue border */
+.dropdown-item.selected:hover,
+.dropdown-item.selected:focus-visible,
+.flyout-option.selected:hover,
+.flyout-option.selected:focus-visible {
+  background: var(--app-surface-strong);
+  border-color: var(--app-focus, #007acc);
 }
 
 /* Checkmark indicator for selected options */
@@ -1168,16 +1177,16 @@ button:disabled {
   color: var(--app-accent);
 }
 
-/* Interactive toggle switch row inside flyout submenu - Flush layout & 1px gray border hover */
+/* Interactive toggle switch row inside flyout submenu - Full rounded pill shape with flush edges */
 .toggle-switch-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 5px 10px;
+  padding: 5px 12px;
   margin: 0;
   border: 1px solid transparent;
-  border-radius: var(--app-radius-sm, 4px);
+  border-radius: 999px;
   background: transparent;
   cursor: pointer;
   user-select: none;
@@ -1187,11 +1196,12 @@ button:disabled {
   transition: border-color 0.15s ease, color 0.15s ease;
 }
 
-/* Hover state: 1px gray border without background fill */
-.toggle-switch-row:hover {
+/* Hover state: 1px blue border */
+.toggle-switch-row:hover,
+.toggle-switch-row:focus-visible {
   background: transparent;
   color: var(--app-fg);
-  border-color: var(--app-border-strong, #444444);
+  border-color: var(--app-focus, #007acc);
 }
 
 /* Label text container inside toggle switch row */
@@ -1255,11 +1265,11 @@ button:disabled {
   flex-direction: column;
 }
 
-/* Inner visible box of the Thinking & Reasoning flyout - 0 padding flush edges */
+/* Inner visible box of the Thinking & Reasoning flyout - Borderless container with 0 padding flush edges */
 .thinking-flyout-menu-inner {
   background: var(--app-dropdown-bg);
-  border: 1px solid var(--app-border-strong);
-  border-radius: var(--app-radius-md);
+  border: none !important;
+  border-radius: 12px;
   box-shadow: var(--app-flyout-shadow);
   padding: 0;
   display: flex;
@@ -1268,19 +1278,20 @@ button:disabled {
   overflow: hidden;
 }
 
-/* Divider inside Thinking Flyout menu between toggle and reasoning levels */
+/* If the flyout has only ONE item (single toggle): container is a full pill matching the button */
+.thinking-flyout-menu-inner:has(> :only-child) {
+  border-radius: 999px;
+}
+
+/* Divider inside Thinking Flyout menu - Removed for seamless appearance */
 .flyout-divider {
-  height: 1px;
-  background: var(--app-border-strong, #3c3c3c);
-  margin: 0;
-  width: 100%;
+  display: none !important;
 }
 
 /* Active open state on parent item when flyout submenu is visible */
 .dropdown-item.model-hover-item.flyout-open {
   color: var(--app-fg);
-  background: transparent;
-  border-color: var(--app-border-strong, #444444);
+  border-color: var(--app-focus, #007acc);
 }
 
 /* Make flyout submenu visible when open */
@@ -1335,14 +1346,14 @@ button:disabled {
   margin: 0;
 }
 
-/* Settings & Help category wrapper - Smooth 250ms morph between pill and card */
+/* Settings & Help category wrapper - Smooth 250ms morph with distinct darker background and 2px border */
 .settings-category {
   position: relative;
   margin: 0;
   padding: 0;
-  border: 1px solid var(--app-border-subtle, rgba(255, 255, 255, 0.08));
+  border: 2px solid var(--app-border-strong, rgba(255, 255, 255, 0.14));
   border-radius: 12px;
-  background: transparent;
+  background: rgba(0, 0, 0, 0.55);
   box-sizing: border-box;
   width: 100%;
   overflow: hidden;
