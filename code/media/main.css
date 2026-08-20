@@ -1025,7 +1025,7 @@ button:disabled {
   flex-shrink: 0;
 }
 
-/* Options menu container for the Model Selector Dropdown (Leaves 195px reserved distance from the right side for the thinking flyout menu) */
+/* Options menu container for the Model Selector Dropdown - Flush edges with 0 padding */
 .dropdown-menu {
   position: absolute;
   left: 0;
@@ -1034,59 +1034,71 @@ button:disabled {
   width: calc(100cqw - 195px);
   min-width: 140px;
   max-width: calc(100cqw - 195px);
-  padding: 4px 2px;
+  padding: 0;
   box-sizing: border-box;
   background: var(--app-dropdown-bg);
   border: 1px solid var(--app-border-strong);
   border-radius: var(--app-radius-md);
   box-shadow: var(--app-dropdown-shadow);
-  overflow: visible;
+  overflow: hidden;
 }
 
 /* Accordion provider group within the Model Selector Dropdown */
 .dropdown-category {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
   margin: 0;
 }
 
-/* Category header toggle button for provider accordions (LM Studio, Gemini, Mistral AI, etc.) */
+/* Category header toggle button for provider accordions - Transparent background & uppercase text */
 .dropdown-category-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
+  gap: 8px;
+  padding: 8px 12px 6px 12px;
   margin: 0;
-  background: var(--app-surface-strong);
+  background: transparent !important;
   color: var(--app-muted);
-  font-size: 0.75rem;
+  font-size: 0.70rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   cursor: pointer;
   user-select: none;
   border: 0 !important;
-  border-radius: var(--app-radius-sm);
+  border-radius: 0;
   outline: none;
   width: 100%;
   box-sizing: border-box;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: color 0.15s ease;
 }
 
+/* Hover state for category header toggle button */
 .dropdown-category-header:hover,
 .dropdown-category-header:focus-visible {
-  background: var(--app-surface-hover);
+  background: transparent !important;
   color: var(--app-fg);
 }
 
+/* Rotating chevron icon for category accordion header */
 .dropdown-category-header .chevron-icon {
   transition: transform 0.2s ease;
+  color: var(--app-muted);
+  flex-shrink: 0;
 }
 
+/* Hover state for chevron icon */
+.dropdown-category-header:hover .chevron-icon {
+  color: var(--app-fg);
+}
+
+/* Category content container holding model item buttons */
 .dropdown-category-content {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
   margin: 0;
   padding: 0;
   max-height: 1000px;
@@ -1094,13 +1106,14 @@ button:disabled {
   transition: max-height 0.2s ease;
 }
 
+/* Collapsed state for accordion category content */
 .dropdown-category-content.collapsed {
   max-height: 0;
   overflow: hidden;
   gap: 0;
 }
 
-/* Unified button option item for ALL dropdowns (Model Selector & Thinking Dropdown) */
+/* Unified button option item for ALL dropdowns (Model Selector & Thinking Dropdown) - Flush layout with rounded corners */
 .dropdown-item,
 .flyout-option {
   display: flex;
@@ -1118,21 +1131,23 @@ button:disabled {
   position: relative;
   cursor: pointer;
   user-select: none;
-  border: 0 !important;
-  border-radius: var(--app-radius-sm);
+  border: 1px solid transparent;
+  border-radius: var(--app-radius-sm, 4px);
   outline: none;
   width: 100%;
   text-align: left;
   box-sizing: border-box;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: border-color 0.15s ease, color 0.15s ease;
 }
 
+/* Hover effect: 1px gray border without background fill */
 .dropdown-item:hover,
 .dropdown-item:focus-visible,
 .flyout-option:hover,
 .flyout-option:focus-visible {
   color: var(--app-fg);
-  background: var(--vscode-list-hoverBackground, var(--app-surface-hover));
+  background: transparent;
+  border-color: var(--app-border-strong, #444444);
 }
 
 /* Selected item state for dropdown options */
@@ -1143,6 +1158,7 @@ button:disabled {
   font-weight: 600;
 }
 
+/* Checkmark indicator for selected options */
 .dropdown-item .check-icon,
 .flyout-option .check-icon {
   margin-left: auto;
@@ -1152,25 +1168,30 @@ button:disabled {
   color: var(--app-accent);
 }
 
-/* Interactive toggle switch row inside flyout submenu */
+/* Interactive toggle switch row inside flyout submenu - Flush layout & 1px gray border hover */
 .toggle-switch-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 4px 6px;
-  border-radius: var(--app-radius-sm);
+  padding: 5px 10px;
+  margin: 0;
+  border: 1px solid transparent;
+  border-radius: var(--app-radius-sm, 4px);
   background: transparent;
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  box-sizing: border-box;
+  width: 100%;
+  transition: border-color 0.15s ease, color 0.15s ease;
 }
 
-/* Hover state for toggle switch row inside flyout */
+/* Hover state: 1px gray border without background fill */
 .toggle-switch-row:hover {
-  background: var(--vscode-list-hoverBackground, var(--app-surface-hover));
+  background: transparent;
   color: var(--app-fg);
+  border-color: var(--app-border-strong, #444444);
 }
 
 /* Label text container inside toggle switch row */
@@ -1234,29 +1255,32 @@ button:disabled {
   flex-direction: column;
 }
 
-/* Inner visible box of the Thinking & Reasoning flyout */
+/* Inner visible box of the Thinking & Reasoning flyout - 0 padding flush edges */
 .thinking-flyout-menu-inner {
   background: var(--app-dropdown-bg);
   border: 1px solid var(--app-border-strong);
   border-radius: var(--app-radius-md);
   box-shadow: var(--app-flyout-shadow);
-  padding: 3px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 0;
+  overflow: hidden;
 }
 
 /* Divider inside Thinking Flyout menu between toggle and reasoning levels */
 .flyout-divider {
   height: 1px;
   background: var(--app-border-strong, #3c3c3c);
-  margin: 3px 2px;
+  margin: 0;
+  width: 100%;
 }
 
 /* Active open state on parent item when flyout submenu is visible */
 .dropdown-item.model-hover-item.flyout-open {
   color: var(--app-fg);
-  background: var(--app-surface-hover);
+  background: transparent;
+  border-color: var(--app-border-strong, #444444);
 }
 
 /* Make flyout submenu visible when open */
