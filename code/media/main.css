@@ -109,7 +109,7 @@ body {
 
 body {
   margin: 0;
-  padding: 10px;
+  padding: 6px 4px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -741,7 +741,7 @@ button:disabled {
   flex-shrink: 0;
 }
 
-/* Send & stop generation button */
+/* Send & stop generation button - Full circle pill */
 #send-btn,
 #stop-btn {
   display: inline-flex;
@@ -751,7 +751,7 @@ button:disabled {
   height: 24px;
   padding: 0;
   border: 0 !important;
-  border-radius: var(--app-radius-md);
+  border-radius: 999px;
   background: var(--app-accent, #007acc);
   color: var(--vscode-button-foreground, #ffffff);
   cursor: pointer;
@@ -765,7 +765,7 @@ button:disabled {
   opacity: 0.9;
 }
 
-/* Compact icon buttons for file upload (+) and capabilities (@) */
+/* Compact icon buttons for file upload (+) and capabilities (@) - Full circle pill */
 .toolbar-icon-btn {
   display: inline-flex;
   align-items: center;
@@ -774,7 +774,7 @@ button:disabled {
   height: 24px;
   padding: 0;
   border: 0 !important;
-  border-radius: var(--app-radius-md);
+  border-radius: 999px;
   background: var(--app-surface-strong);
   color: var(--app-muted);
   cursor: pointer;
@@ -929,7 +929,7 @@ button:disabled {
   flex: 1 1 auto;
 }
 
-/* Primary Model Selector Dropdown Trigger Button - Fits text length up to max-width */
+/* Primary Model Selector Dropdown Trigger Button - Full rounded pill */
 .dropdown-trigger {
   height: 24px;
   box-sizing: border-box;
@@ -939,9 +939,9 @@ button:disabled {
   align-items: center;
   justify-content: flex-start;
   gap: 5px;
-  padding: 0 8px;
+  padding: 0 10px;
   border: 0 !important;
-  border-radius: var(--app-radius-md);
+  border-radius: 999px;
   background: var(--app-surface-strong);
   color: var(--app-muted);
   font-size: 0.72rem;
@@ -1346,14 +1346,14 @@ button:disabled {
   margin: 0;
 }
 
-/* Settings & Help category wrapper - Smooth 250ms morph with distinct darker background and 2px border */
+/* Settings & Help category wrapper - Smooth 250ms morph with ultra-subtle darker background (#1b1b1b) and 2px border */
 .settings-category {
   position: relative;
   margin: 0;
   padding: 0;
-  border: 2px solid var(--app-border-strong, rgba(255, 255, 255, 0.14));
+  border: 2px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.55);
+  background: #1b1b1b;
   box-sizing: border-box;
   width: 100%;
   overflow: hidden;
@@ -1393,9 +1393,9 @@ button:disabled {
   transition: color 0.15s ease;
 }
 
-/* Pill-shaped header button when inside collapsed category */
+/* Pill-shaped header button when inside collapsed category - Minimal side padding */
 .settings-category .category-header-btn {
-  padding: 10px 16px;
+  padding: 6px 8px;
   transition: border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
 }
 
@@ -1451,15 +1451,15 @@ button:disabled {
   transform: rotate(-90deg);
 }
 
-/* Category Content Container - Smooth top-down unroll & roll-up in 250ms */
+/* Category Content Container - Smooth top-down unroll & roll-up with minimal 6px side spacing */
 .category-content {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 8px;
+  gap: 6px;
   max-height: 260px;
   opacity: 1;
-  padding: 4px 16px 14px 16px;
+  padding: 3px 6px 8px 6px;
   box-sizing: border-box;
   overflow: hidden;
   transition: max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, padding 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1467,11 +1467,13 @@ button:disabled {
 
 .category-content .setting-item {
   margin-bottom: 1px;
+  width: 100%;
 }
 
 #manage-keys-container {
   margin-top: 2px;
   margin-bottom: 1px;
+  width: 100%;
 }
 
 .settings-category.collapsed .category-content {
@@ -1997,8 +1999,8 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 6px;
+  margin-bottom: 8px;
+  padding: 2px 2px 6px 2px;
   border-bottom: 1px solid var(--app-border-subtle);
   color: var(--app-fg);
   font-size: 0.85rem;
@@ -2008,19 +2010,21 @@ button:disabled {
 .history-list,
 .keys-content-panel {
   min-height: 0;
+  width: 100%;
 }
 
 .settings-content-panel {
   min-height: 0;
   overflow-y: auto;
   flex: 1 1 auto;
+  width: 100%;
 }
 
 .history-empty-state {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px 16px;
+  padding: 24px 8px;
   text-align: center;
   color: var(--app-muted);
   font-size: 0.8rem;
@@ -2032,8 +2036,10 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 10px;
+  padding: 6px 8px;
   gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
   border: 0 !important;
   border-radius: var(--app-radius-md);
   background: transparent;
@@ -2463,7 +2469,7 @@ details[open]>summary>.custom-chevron {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 6px 4px;
   box-sizing: border-box;
 }
 
@@ -2496,7 +2502,7 @@ details[open]>summary>.custom-chevron {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
+  padding: 8px 10px;
   border-bottom: 1px solid var(--app-border-subtle, #2d2d2d);
   background: var(--app-surface-strong, #252526);
 }
@@ -2531,7 +2537,7 @@ details[open]>summary>.custom-chevron {
 }
 
 .help-modal-body {
-  padding: 10px 14px 16px 14px;
+  padding: 6px 6px 10px 6px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;

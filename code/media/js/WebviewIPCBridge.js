@@ -196,6 +196,11 @@ class WebviewIPCBridge {
      * @param {string} url External URL string.
      */
     openExternalUrl(url) {
-        this.postMessage({ type: 'openExternal', url });
+        if (!url) return;
+        try {
+            this.postMessage({ type: 'openExternal', url });
+        } catch (e) {
+            window.open(url, '_blank', 'noopener,noreferrer');
+        }
     }
 }
