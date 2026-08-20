@@ -208,17 +208,7 @@ class HelpModalController {
             contentDiv.innerHTML = `<div class="help-accordion-inner">${sec.content}</div>`;
 
             headerBtn.addEventListener('click', () => {
-                const isCurrentlyCollapsed = categoryDiv.classList.contains('collapsed');
-
-                // Single-accordion rule: collapse all items first
-                bodyEl.querySelectorAll('.settings-category').forEach(el => {
-                    el.classList.add('collapsed');
-                });
-
-                // Toggle target item
-                if (isCurrentlyCollapsed) {
-                    categoryDiv.classList.remove('collapsed');
-                }
+                categoryDiv.classList.toggle('collapsed');
             });
 
             categoryDiv.appendChild(headerBtn);
