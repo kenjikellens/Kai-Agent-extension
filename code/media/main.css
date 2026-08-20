@@ -1056,12 +1056,12 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px 6px 12px;
+  gap: 12px;
+  padding: 12px 10px 12px 10px;
   margin: 0;
   background: transparent !important;
   color: var(--app-muted);
-  font-size: 0.70rem;
+  font-size: 0.78rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
