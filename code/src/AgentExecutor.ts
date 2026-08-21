@@ -79,7 +79,7 @@ export class AgentExecutor {
 
         this.tools = getRegisteredTools(mode);
         // Find existing system prompt or inject ours at the beginning
-        let systemContent = this.getSystemPrompt(useNativeFunctionCalling);
+        let systemContent = this.getSystemPrompt(mode, useNativeFunctionCalling);
         const now = new Date();
         const currentDayTimeStr = `[Temporal Context & Knowledge Cutoff]\n- Current Date and Time: ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}, ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}\n- Your internal training cutoff is in the past. Events, releases, and information dated prior to the current date are historical facts, not future speculation.\n- NEVER state that an event, product, or topic prior to the current date is unreleased or speculative based on training cutoff limitations. Use available search tools if current details are required.`;
         systemContent += `\n\n${currentDayTimeStr}\n`;
@@ -364,20 +364,48 @@ export class AgentExecutor {
     }
 
     /**
-     * Constructs the system prompt by loading it from system_prompt.md.
+     * Constructs the system prompt by loading the appropriate mode-specific markdown file from prompts/.
+     * @param mode Active execution mode ('agent' | 'planning' | 'ask' | 'chat').
+     * @param nativeFunctionCalling Whether the provider handles native function schemas.
      * @returns The formatting guide system instructions.
      */
-    private getSystemPrompt(nativeFunctionCalling: boolean = false): string {
-        const promptPath = path.join(this.extensionPath, 'system_prompt.md');
-        try {
-            if (fs.existsSync(promptPath)) {
-                const prompt = fs.readFileSync(promptPath, 'utf8');
-                return nativeFunctionCalling ? this.getNativeFunctionCallingPrompt(prompt) : prompt;
-            }
-        } catch (e) {
-            console.error('Error reading system_prompt.md:', e);
+    private getSystemPrompt(
+        mode: 'agent' | 'planning' | 'ask' | 'chat' | string = 'agent',
+        nativeFunctionCalling: boolean = false
+    ): string {
+        let fileName = 'system_prompt_agent.md';
+        if (mode === 'ask') {
+            fileName = 'system_prompt_ask.md';
+        } else if (mode === 'planning') {
+            fileName = 'system_prompt_planning.md';
         }
-        return `You are a powerful, autonomous local AI Developer Agent operating directly within the user's workspace directory. You have full access to view, list, search, and edit the workspace using tools.`;
+
+        const candidatePaths = [
+            path.join(this.extensionPath, 'prompts', fileName),
+            path.join(process.cwd(), 'prompts', fileName),
+            path.join(__dirname, '..', '..', 'prompts', fileName),
+            path.join(__dirname, 'prompts', fileName),
+            path.join(this.extensionPath, fileName),
+            path.join(process.cwd(), fileName),
+            // Fallbacks
+            path.join(this.extensionPath, 'prompts', 'system_prompt.md'),
+            path.join(process.cwd(), 'prompts', 'system_prompt.md'),
+            path.join(this.extensionPath, 'system_prompt.md'),
+            path.join(process.cwd(), 'system_prompt.md')
+        ];
+
+        for (const promptPath of candidatePaths) {
+            try {
+                if (fs.existsSync(promptPath)) {
+                    const prompt = fs.readFileSync(promptPath, 'utf8');
+                    return nativeFunctionCalling ? this.getNativeFunctionCallingPrompt(prompt) : prompt;
+                }
+            } catch {
+                // ignore
+            }
+        }
+
+        return `You are Kai, an autonomous AI Developer Agent operating directly within the user's workspace directory. You have full access to view, list, search, and edit the workspace using tools.`;
     }
 
     /**

@@ -33,7 +33,7 @@ if exist "%USERPROFILE%\.vscode\extensions" (
     if not exist "%DEST_VSCODE%" mkdir "%DEST_VSCODE%"
     copy /Y "code\package.json" "%DEST_VSCODE%\package.json" >nul
     copy /Y "code\README.md" "%DEST_VSCODE%\README.md" >nul
-    copy /Y "code\system_prompt.md" "%DEST_VSCODE%\system_prompt.md" >nul
+    xcopy /E /I /Y "code\prompts" "%DEST_VSCODE%\prompts" >nul
     xcopy /E /I /Y "code\out" "%DEST_VSCODE%\out" >nul
     xcopy /E /I /Y "code\media" "%DEST_VSCODE%\media" >nul
     echo   - Synced to VS Code
@@ -44,7 +44,7 @@ if exist "%USERPROFILE%\.antigravity\extensions" (
     if not exist "%DEST_ANTIGRAVITY%" mkdir "%DEST_ANTIGRAVITY%"
     copy /Y "code\package.json" "%DEST_ANTIGRAVITY%\package.json" >nul
     copy /Y "code\README.md" "%DEST_ANTIGRAVITY%\README.md" >nul
-    copy /Y "code\system_prompt.md" "%DEST_ANTIGRAVITY%\system_prompt.md" >nul
+    xcopy /E /I /Y "code\prompts" "%DEST_ANTIGRAVITY%\prompts" >nul
     xcopy /E /I /Y "code\out" "%DEST_ANTIGRAVITY%\out" >nul
     xcopy /E /I /Y "code\media" "%DEST_ANTIGRAVITY%\media" >nul
     echo   - Synced to Antigravity
@@ -55,7 +55,7 @@ if exist "%USERPROFILE%\.antigravity-ide\extensions" (
     if not exist "%DEST_ANTIGRAVITY_IDE%" mkdir "%DEST_ANTIGRAVITY_IDE%"
     copy /Y "code\package.json" "%DEST_ANTIGRAVITY_IDE%\package.json" >nul
     copy /Y "code\README.md" "%DEST_ANTIGRAVITY_IDE%\README.md" >nul
-    copy /Y "code\system_prompt.md" "%DEST_ANTIGRAVITY_IDE%\system_prompt.md" >nul
+    xcopy /E /I /Y "code\prompts" "%DEST_ANTIGRAVITY_IDE%\prompts" >nul
     xcopy /E /I /Y "code\out" "%DEST_ANTIGRAVITY_IDE%\out" >nul
     xcopy /E /I /Y "code\media" "%DEST_ANTIGRAVITY_IDE%\media" >nul
     echo   - Synced to Antigravity IDE
