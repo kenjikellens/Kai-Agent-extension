@@ -49,5 +49,13 @@ export const nl: Translations = {
     "welcomeTitle": "Welkom bij Kai",
     "welcomePromptHint": "Stel een vraag, bewerk code of voeg bestanden toe om te beginnen",
     "help": "Help",
-    "readme": "README"
+    "readme": "README",
+    "serverUrlDesc": "Het lokale endpoint van de LM Studio API server (standaard http://localhost:1234/v1)",
+    "lmStudioDirectoryDesc": "Pad naar de lokale LM Studio cache voor automatische model- en thinking-detectie",
+    "thinkingDisplayStyleDesc": "Kies tussen een inklapbare kaart of inline tekst",
+    "showThinkingDesc": "Toont de interne denkstappen en redeneringen van ondersteunde modellen",
+    "keepThinkingGeneratingDesc": "Houdt het denkblok geopend zolang het model aan het redeneren is",
+    "keepThinkingFinishedDesc": "Laat het denkproces geopend na voltooien in plaats van automatisch in te klappen",
+    apiKeysSettingsDesc: "Beheer API-sleutels en test live de verbinding voor cloudmodellen",
+    testConnection: "Verbinding testen"
 };

@@ -49,5 +49,13 @@ export const zh: Translations = {
     "welcomeTitle": "欢迎使用 Kai",
     "welcomePromptHint": "提出问题、编辑代码或附加文件以开始",
     "help": "帮助",
-    "readme": "README"
+    "readme": "README",
+    "serverUrlDesc": "Local endpoint of the LM Studio API server (default http://localhost:1234/v1)",
+    "lmStudioDirectoryDesc": "Path to the local LM Studio cache directory for automatic model and thinking detection",
+    "thinkingDisplayStyleDesc": "Choose between a collapsible card or inline text",
+    "showThinkingDesc": "Displays internal reasoning traces for supported models",
+    "keepThinkingGeneratingDesc": "Keeps the reasoning block open while the response is streaming",
+    "keepThinkingFinishedDesc": "Leaves the reasoning card expanded after generation completes",
+    apiKeysSettingsDesc: "管理 API 密钥并测试云模型的实时连接",
+    testConnection: "测试连接"
 };

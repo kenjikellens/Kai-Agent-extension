@@ -49,5 +49,13 @@ export const fr: Translations = {
     "welcomeTitle": "Bienvenue sur Kai",
     "welcomePromptHint": "Posez une question, modifiez du code ou joignez des fichiers pour commencer",
     "help": "Aide",
-    "readme": "README"
+    "readme": "README",
+    "serverUrlDesc": "Point de terminaison local du serveur API LM Studio (par défaut http://localhost:1234/v1)",
+    "lmStudioDirectoryDesc": "Chemin d'accès au cache local de LM Studio pour la détection des modèles",
+    "thinkingDisplayStyleDesc": "Choisissez entre une carte rétractable ou du texte brut",
+    "showThinkingDesc": "Affiche les étapes de réflexion internes pour les modèles compatibles",
+    "keepThinkingGeneratingDesc": "Garde le bloc de réflexion ouvert pendant la génération",
+    "keepThinkingFinishedDesc": "Laisse la carte de réflexion ouverte une fois la génération terminée",
+    apiKeysSettingsDesc: "Gérez les clés API et testez les connexions en direct pour les modèles cloud",
+    testConnection: "Tester la connexion"
 };

@@ -49,5 +49,13 @@ export const it: Translations = {
     "welcomeTitle": "Benvenuto in Kai",
     "welcomePromptHint": "Fai una domanda, modifica il codice o allega file per iniziare",
     "help": "Aiuto",
-    "readme": "README"
+    "readme": "README",
+    "serverUrlDesc": "Local endpoint of the LM Studio API server (default http://localhost:1234/v1)",
+    "lmStudioDirectoryDesc": "Path to the local LM Studio cache directory for automatic model and thinking detection",
+    "thinkingDisplayStyleDesc": "Choose between a collapsible card or inline text",
+    "showThinkingDesc": "Displays internal reasoning traces for supported models",
+    "keepThinkingGeneratingDesc": "Keeps the reasoning block open while the response is streaming",
+    "keepThinkingFinishedDesc": "Leaves the reasoning card expanded after generation completes",
+    apiKeysSettingsDesc: "Gestisci le chiavi API e testa le connessioni live per i modelli cloud",
+    testConnection: "Testa connessione"
 };

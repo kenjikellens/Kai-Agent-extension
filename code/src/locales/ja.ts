@@ -49,5 +49,13 @@ export const ja: Translations = {
     "welcomeTitle": "Kai へようこそ",
     "welcomePromptHint": "質問を入力、コードを編集、またはファイルを添付して開始してください",
     "help": "ヘルプ",
-    "readme": "README"
+    "readme": "README",
+    "serverUrlDesc": "Local endpoint of the LM Studio API server (default http://localhost:1234/v1)",
+    "lmStudioDirectoryDesc": "Path to the local LM Studio cache directory for automatic model and thinking detection",
+    "thinkingDisplayStyleDesc": "Choose between a collapsible card or inline text",
+    "showThinkingDesc": "Displays internal reasoning traces for supported models",
+    "keepThinkingGeneratingDesc": "Keeps the reasoning block open while the response is streaming",
+    "keepThinkingFinishedDesc": "Leaves the reasoning card expanded after generation completes",
+    apiKeysSettingsDesc: "APIキーを管理し、クラウドモデルのライブ接続をテストします",
+    testConnection: "接続をテスト"
 };

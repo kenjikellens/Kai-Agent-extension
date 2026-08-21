@@ -68,6 +68,14 @@ export interface Translations {
     welcomePromptHint: string;
     help: string;
     readme: string;
+    serverUrlDesc?: string;
+    lmStudioDirectoryDesc?: string;
+    thinkingDisplayStyleDesc?: string;
+    showThinkingDesc?: string;
+    keepThinkingGeneratingDesc?: string;
+    keepThinkingFinishedDesc?: string;
+    apiKeysSettingsDesc?: string;
+    testConnection?: string;
 }
 
 /**

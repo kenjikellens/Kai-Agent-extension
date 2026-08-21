@@ -30,6 +30,7 @@ class SettingsController {
         this.dynamicKeysList = document.getElementById('dynamic-keys-list');
 
         this.freeProviders = [...KAI_CONSTANTS.DEFAULT_FREE_PROVIDERS];
+        this.providerReloadButtons = new Map();
 
         this.initSettings();
         this.initEventListeners();
@@ -125,8 +126,6 @@ class SettingsController {
                 }
             });
         }
-
-        // 6. Thinking Display Style Custom Select Dropdown (Icon + Text / Icon Only / Text Only)
     }
 
     /**
@@ -229,6 +228,32 @@ class SettingsController {
      * @param {object} message Connection status message.
      */
     updateConnectionStatus(message) {
+        if (!message) return;
+
+        if (message.type === 'providerTestResult' && message.configKey) {
+            const btn = this.providerReloadButtons.get(message.configKey);
+            if (btn) {
+                btn.classList.remove('testing');
+                if (message.success) {
+                    btn.classList.remove('error');
+                    btn.classList.add('success');
+                    btn.innerHTML = window.KAI_SVGS.success || '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                    btn.title = 'Connected';
+                } else {
+                    btn.classList.remove('success');
+                    btn.classList.add('error');
+                    btn.innerHTML = window.KAI_SVGS.error || '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+                    btn.title = 'Connection failed';
+                }
+                setTimeout(() => {
+                    btn.classList.remove('success', 'error');
+                    btn.innerHTML = window.KAI_SVGS.refresh || '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>';
+                    btn.title = 'Test connection';
+                }, 2500);
+            }
+            return;
+        }
+
         if (this.serverUrlInput && message.serverUrl !== undefined) {
             this.serverUrlInput.value = message.serverUrl;
         }
@@ -288,7 +313,7 @@ class SettingsController {
         this.ipcBridge.updateSettings({
             serverUrl: this.serverUrlInput ? this.serverUrlInput.value : 'http://localhost:1234/v1',
             lmStudioCacheDir: this.lmStudioPathInput ? this.lmStudioPathInput.value : '',
-            apiKey: this.apiKeyInput ? this.apiKeyInput.value : '',
+            apiKey: (this.freeProviders.find(p => p.configKey === 'geminiApiKey') || {}).apiKey || '',
             providerKeys: providerKeys
         });
     }
@@ -299,6 +324,7 @@ class SettingsController {
     renderProviderKeyInputs() {
         if (!this.dynamicKeysList) return;
         this.dynamicKeysList.innerHTML = '';
+        this.providerReloadButtons.clear();
 
         const providers = this.freeProviders && this.freeProviders.length > 0 ? this.freeProviders : KAI_CONSTANTS.DEFAULT_FREE_PROVIDERS;
 
@@ -306,23 +332,107 @@ class SettingsController {
             const wrapper = document.createElement('div');
             wrapper.className = 'setting-item';
 
-            const label = document.createElement('label');
-            label.className = 'setting-label';
-            label.textContent = `${provider.name} API Key / URL`;
-            label.setAttribute('for', `provider-key-${provider.configKey}`);
+            // Provider Name with External Link Icon (↗)
+            const labelLink = document.createElement('a');
+            labelLink.className = 'provider-label-link';
+            if (provider.docUrl) {
+                labelLink.href = provider.docUrl;
+                labelLink.target = '_blank';
+                labelLink.rel = 'noopener noreferrer';
+                labelLink.title = `Open ${provider.name} documentation`;
+                labelLink.addEventListener('click', (e) => {
+                    if (this.ipcBridge) {
+                        e.preventDefault();
+                        this.ipcBridge.sendMessage('openExternalUrl', { url: provider.docUrl });
+                    }
+                });
+            }
+
+            const name = document.createElement('span');
+            name.className = 'setting-label';
+            name.textContent = `${provider.name} API Key`;
+            labelLink.appendChild(name);
+
+            if (provider.docUrl) {
+                const docIconSpan = document.createElement('span');
+                docIconSpan.className = 'provider-doc-icon';
+                docIconSpan.innerHTML = window.KAI_SVGS.external_link || '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>';
+                labelLink.appendChild(docIconSpan);
+            }
+
+            const inputContainer = document.createElement('div');
+            inputContainer.className = 'provider-input-container';
 
             const input = document.createElement('input');
-            input.type = provider.configKey.includes('Url') ? 'text' : 'password';
+            input.type = provider.configKey && provider.configKey.includes('Url') ? 'text' : 'password';
             input.id = `provider-key-${provider.configKey}`;
             input.className = 'settings-input provider-api-key-input';
             input.dataset.configKey = provider.configKey;
-            input.placeholder = provider.keyHint || 'Enter API key…';
-            input.value = provider.apiKey || '';
+            input.placeholder = `${provider.name} API Key`;
+            
+            const savedKey = provider.configKey ? localStorage.getItem(`kai.${provider.configKey}`) : null;
+            input.value = savedKey !== null ? savedKey : (provider.apiKey || '');
+            provider.apiKey = input.value;
+
+            const eyeSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+            const eyeOffSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+
+            const toggleBtn = document.createElement('button');
+            toggleBtn.type = 'button';
+            toggleBtn.className = 'toggle-password-btn';
+            toggleBtn.innerHTML = eyeSvg;
+            toggleBtn.title = 'Show/Hide';
+            toggleBtn.addEventListener('click', () => {
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                toggleBtn.innerHTML = isPassword ? eyeOffSvg : eyeSvg;
+            });
+
+            // Reload / Check Connection Button
+            const reloadBtn = document.createElement('button');
+            reloadBtn.type = 'button';
+            reloadBtn.className = 'reload-key-btn';
+            reloadBtn.innerHTML = window.KAI_SVGS.refresh || '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>';
+            reloadBtn.title = 'Test connection';
+
+            if (provider.configKey) {
+                this.providerReloadButtons.set(provider.configKey, reloadBtn);
+            }
+
+            reloadBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (reloadBtn.classList.contains('testing')) return;
+
+                const currentKey = input.value.trim();
+                provider.apiKey = currentKey;
+                if (provider.configKey) {
+                    localStorage.setItem(`kai.${provider.configKey}`, currentKey);
+                    if (provider.configKey === 'geminiApiKey') {
+                        localStorage.setItem('kai.apiKey', currentKey);
+                    }
+                    if (this.settingsRepo) this.settingsRepo.setProviderKey(provider.configKey, currentKey);
+                }
+                this.saveAllSettings();
+
+                reloadBtn.classList.remove('success', 'error');
+                reloadBtn.classList.add('testing');
+                reloadBtn.title = 'Testing connection...';
+
+                if (this.ipcBridge) {
+                    this.ipcBridge.sendMessage('testProviderConnection', {
+                        configKey: provider.configKey,
+                        apiKey: currentKey
+                    });
+                }
+            });
 
             input.addEventListener('input', () => {
                 provider.apiKey = input.value.trim();
                 if (provider.configKey) {
                     localStorage.setItem(`kai.${provider.configKey}`, provider.apiKey);
+                    if (provider.configKey === 'geminiApiKey') {
+                        localStorage.setItem('kai.apiKey', provider.apiKey);
+                    }
                     if (this.settingsRepo) this.settingsRepo.setProviderKey(provider.configKey, provider.apiKey);
                     window.dispatchEvent(new CustomEvent('kaiProviderKeysUpdated'));
                 }
@@ -330,8 +440,12 @@ class SettingsController {
 
             input.addEventListener('change', () => this.saveAllSettings());
 
-            wrapper.appendChild(label);
-            wrapper.appendChild(input);
+            inputContainer.appendChild(input);
+            inputContainer.appendChild(toggleBtn);
+            inputContainer.appendChild(reloadBtn);
+
+            wrapper.appendChild(labelLink);
+            wrapper.appendChild(inputContainer);
             this.dynamicKeysList.appendChild(wrapper);
         }
     }

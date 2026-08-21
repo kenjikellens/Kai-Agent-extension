@@ -171,10 +171,32 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     await this._handleOpenFilePicker();
                     break;
                 }
-                case 'openExternal': {
+                case 'openExternal':
+                case 'openExternalUrl': {
                     if (data.url) {
                         vscode.env.openExternal(vscode.Uri.parse(data.url));
                     }
+                    break;
+                }
+                case 'testProviderConnection': {
+                    const configKey = data.configKey;
+                    const apiKey = data.apiKey;
+                    let isValid = false;
+                    try {
+                        const client = new LMStudioClient('http://localhost:1234/v1', apiKey);
+                        if (configKey === 'geminiApiKey') {
+                            isValid = await client.validateGemini(apiKey);
+                        } else {
+                            isValid = await client.validateFreeProvider(configKey, apiKey);
+                        }
+                    } catch (e) {
+                        isValid = false;
+                    }
+                    this._view?.webview.postMessage({
+                        type: 'providerTestResult',
+                        configKey: configKey,
+                        success: isValid
+                    });
                     break;
                 }
                 case 'webviewLog': {
@@ -863,11 +885,13 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                                     </button>
                                     <div class="category-content">
                                         <div class="setting-item">
-                                            <label for="settings-server-url" style="font-size: 0.75rem; color: var(--app-muted); margin-bottom: 4px; display: block;">${translations.serverUrl || 'Server URL'}</label>
+                                            <label for="settings-server-url" style="font-size: 0.75rem; color: var(--app-muted); margin-bottom: 2px; display: block;">${translations.serverUrl || 'Server URL'}</label>
+                                            <span class="setting-subtitle">${translations.serverUrlDesc || 'Local endpoint of the LM Studio API server (default http://localhost:1234/v1)'}</span>
                                             <input type="text" id="settings-server-url" placeholder="http://localhost:1234/v1" />
                                         </div>
                                         <div class="setting-item">
-                                            <label for="settings-lmstudio-path" style="font-size: 0.75rem; color: var(--app-muted); margin-bottom: 4px; display: block;">${translations.lmStudioDirectory || 'LM Studio Directory'}</label>
+                                            <label for="settings-lmstudio-path" style="font-size: 0.75rem; color: var(--app-muted); margin-bottom: 2px; display: block;">${translations.lmStudioDirectory || 'LM Studio Directory'}</label>
+                                            <span class="setting-subtitle">${translations.lmStudioDirectoryDesc || 'Path to the local LM Studio cache directory for model detection'}</span>
                                             <div style="display: flex; gap: 6px; align-items: center;">
                                                 <input type="text" id="settings-lmstudio-path" style="flex: 1;" placeholder="Auto-detected (~/.cache/lm-studio, ~/.lmstudio)" />
                                                 <button type="button" id="browse-lmstudio-path-btn" class="settings-browse-btn">${translations.browse || 'Browse...'}</button>
@@ -889,6 +913,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                                     <div class="category-content">
                                         <div class="setting-item">
                                             <label for="thinking-display-style-container" class="setting-label">${translations.thinkingDisplayStyle}</label>
+                                            <span class="setting-subtitle">${translations.thinkingDisplayStyleDesc || 'Choose between a collapsible card or inline text'}</span>
                                             <div id="thinking-display-style-container"></div>
                                         </div>
                                         <div class="setting-item">
@@ -908,6 +933,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                                         <svg class="category-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                     </button>
                                     <div class="category-content">
+                                        <span class="setting-subtitle" style="margin-bottom: 6px;">${translations.apiKeysSettingsDesc || 'Manage API keys and test live connections for cloud models'}</span>
                                         <div class="setting-item" id="manage-keys-container">
                                             <button type="button" class="btn-primary" id="manage-keys-btn">
                                                 ${svgs.manage_keys || ''}
@@ -925,10 +951,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                                     <button id="close-keys-btn" class="icon-btn-header" title="${translations.close || 'Close'}">✕</button>
                                 </div>
                                 <div class="keys-content-panel">
-                                    <div class="setting-item" id="gemini-key-item">
-                                        <label for="api-key-input">${translations.geminiApiKey || 'Google Gemini API Key'}</label>
-                                        <input type="password" id="api-key-input" placeholder="AIzaSy...">
-                                    </div>
                                     <!-- Dynamic provider key inputs rendered here -->
                                     <div id="dynamic-keys-list"></div>
                                 </div>

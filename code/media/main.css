@@ -10,6 +10,18 @@
    Theme tokens / defaults
 ------------------------------ */
 :root {
+  /* Centralized Global Theme & Link Color Tokens */
+  --main-link-color: #3794ff;
+  --main-link-hover: #58a6ff;
+  --main-accent-blue: #007acc;
+  --main-accent-blue-hover: #0062a3;
+  --main-success-color: #4ec9b0;
+  --main-danger-color: #f44747;
+  --main-warning-color: #e5a50a;
+  --main-surface-card: #1b1b1b;
+  --main-surface-input: #252526;
+  --main-border-subtle: rgba(255, 255, 255, 0.08);
+
   --app-bg: var(--vscode-sideBar-background, #1e1e1e);
   --app-fg: var(--vscode-editor-foreground, var(--vscode-foreground, #cccccc));
   --app-muted: var(--vscode-descriptionForeground, #888888);
@@ -1430,9 +1442,18 @@ button:disabled {
 .setting-label,
 .switch-label {
   font-size: 0.74rem;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--app-fg);
-  margin-bottom: 3px;
+  margin-bottom: 2px;
+}
+
+.setting-subtitle,
+.setting-description {
+  font-size: 0.68rem;
+  color: var(--app-muted, #888888);
+  line-height: 1.3;
+  margin-bottom: 4px;
+  display: block;
 }
 
 /* Chevron icon for category accordion header */
@@ -1457,7 +1478,7 @@ button:disabled {
   flex-direction: column;
   justify-content: flex-start;
   gap: 6px;
-  max-height: 260px;
+  max-height: 800px;
   opacity: 1;
   padding: 3px 6px 8px 6px;
   box-sizing: border-box;
@@ -1496,6 +1517,107 @@ button:disabled {
 .btn-hover-only:focus-visible {
   background: var(--app-surface-hover);
   border-color: var(--app-border);
+}
+
+/* Provider Label Link with External Top-Right Arrow */
+.provider-label-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  color: var(--app-fg);
+  cursor: pointer;
+  user-select: text;
+  font-size: 0.74rem;
+  font-weight: 500;
+  margin-bottom: 2px;
+  transition: color 0.15s ease;
+}
+
+.provider-label-link:hover {
+  color: var(--main-link-hover, #58a6ff);
+  text-decoration: underline;
+}
+
+.provider-label-link:hover span {
+  color: var(--main-link-hover, #58a6ff) !important;
+  text-decoration: underline;
+}
+
+.provider-doc-icon {
+  flex-shrink: 0;
+  color: var(--app-muted, #888888);
+  transition: color 0.15s ease;
+}
+
+.provider-label-link:hover .provider-doc-icon {
+  color: var(--main-link-hover, #58a6ff);
+}
+
+/* Provider Input Container with Action Buttons */
+.provider-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.provider-input-container input {
+  width: 100%;
+  padding-right: 52px;
+}
+
+.provider-input-container .toggle-password-btn {
+  position: absolute;
+  right: 26px;
+  height: 22px;
+  width: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--app-muted);
+  cursor: pointer;
+  border: 0 !important;
+  border-radius: var(--app-radius-sm);
+  transition: color 0.15s ease;
+}
+
+.provider-input-container .toggle-password-btn:hover {
+  color: var(--app-fg);
+}
+
+.provider-input-container .reload-key-btn {
+  position: absolute;
+  right: 4px;
+  height: 22px;
+  width: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--app-muted);
+  cursor: pointer;
+  border: 0 !important;
+  border-radius: var(--app-radius-sm);
+  transition: color 0.15s ease;
+}
+
+.provider-input-container .reload-key-btn:hover {
+  color: var(--app-fg);
+}
+
+.provider-input-container .reload-key-btn.testing svg {
+  animation: kai-spin 0.8s linear infinite;
+  color: var(--main-link-color, #3794ff);
+}
+
+.provider-input-container .reload-key-btn.success {
+  color: var(--main-success-color, #4ec9b0) !important;
+}
+
+.provider-input-container .reload-key-btn.error {
+  color: var(--main-danger-color, #f44747) !important;
 }
 
 /* ==========================================================================

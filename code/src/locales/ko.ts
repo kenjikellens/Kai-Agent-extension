@@ -49,5 +49,13 @@ export const ko: Translations = {
     "welcomeTitle": "Kai에 오신 것을 환영합니다",
     "welcomePromptHint": "질문하기, 코드 수정 또는 파일을 첨부하여 시작하세요",
     "help": "도움말",
-    "readme": "README"
+    "readme": "README",
+    "serverUrlDesc": "Local endpoint of the LM Studio API server (default http://localhost:1234/v1)",
+    "lmStudioDirectoryDesc": "Path to the local LM Studio cache directory for automatic model and thinking detection",
+    "thinkingDisplayStyleDesc": "Choose between a collapsible card or inline text",
+    "showThinkingDesc": "Displays internal reasoning traces for supported models",
+    "keepThinkingGeneratingDesc": "Keeps the reasoning block open while the response is streaming",
+    "keepThinkingFinishedDesc": "Leaves the reasoning card expanded after generation completes",
+    apiKeysSettingsDesc: "API 키를 관리하고 클라우드 모델의 실시간 연결을 테스트합니다",
+    testConnection: "연결 테스트"
 };

@@ -49,5 +49,13 @@ export const de: Translations = {
     "welcomeTitle": "Willkommen bei Kai",
     "welcomePromptHint": "Stellen Sie eine Frage, bearbeiten Sie Code oder fügen Sie Dateien an, um zu beginnen",
     "help": "Hilfe",
-    "readme": "README"
+    "readme": "README",
+    "serverUrlDesc": "Lokaler Endpunkt des LM Studio API-Servers (Standard http://localhost:1234/v1)",
+    "lmStudioDirectoryDesc": "Pfad zum lokalen LM Studio Cache-Verzeichnis zur Modellerkennung",
+    "thinkingDisplayStyleDesc": "Wählen Sie zwischen einer ausklappbaren Karte oder Inline-Text",
+    "showThinkingDesc": "Zeigt interne Denkprozesse für unterstützte Modelle an",
+    "keepThinkingGeneratingDesc": "Hält den Denkblock während des Streamings geöffnet",
+    "keepThinkingFinishedDesc": "Lässt die Denkkarte nach Abschluss der Antwort geöffnet",
+    apiKeysSettingsDesc: "API-Schlüssel verwalten und Live-Verbindungen für Cloud-Modelle testen",
+    testConnection: "Verbindung testen"
 };
