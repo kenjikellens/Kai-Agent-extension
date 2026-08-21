@@ -280,7 +280,15 @@ class SettingsController {
         }
 
         if (message.freeProviders && message.freeProviders.length > 0) {
-            this.freeProviders = message.freeProviders;
+            this.freeProviders = message.freeProviders.map(p => {
+                const def = (typeof KAI_CONSTANTS !== 'undefined' && KAI_CONSTANTS.DEFAULT_FREE_PROVIDERS)
+                    ? KAI_CONSTANTS.DEFAULT_FREE_PROVIDERS.find(d => d.configKey === p.configKey || d.name === p.name)
+                    : null;
+                return {
+                    ...p,
+                    docUrl: p.docUrl || (def ? def.docUrl : '')
+                };
+            });
         }
         this.renderProviderKeyInputs();
     }
@@ -324,26 +332,35 @@ class SettingsController {
     renderProviderKeyInputs() {
         if (!this.dynamicKeysList) return;
         this.dynamicKeysList.innerHTML = '';
-        this.providerReloadButtons.clear();
+        if (!this.providerReloadButtons) {
+            this.providerReloadButtons = new Map();
+        } else {
+            this.providerReloadButtons.clear();
+        }
 
         const providers = this.freeProviders && this.freeProviders.length > 0 ? this.freeProviders : KAI_CONSTANTS.DEFAULT_FREE_PROVIDERS;
 
         for (const provider of providers) {
+            const defaultDef = (typeof KAI_CONSTANTS !== 'undefined' && KAI_CONSTANTS.DEFAULT_FREE_PROVIDERS)
+                ? KAI_CONSTANTS.DEFAULT_FREE_PROVIDERS.find(d => d.configKey === provider.configKey || d.name === provider.name)
+                : null;
+            const docUrl = provider.docUrl || (defaultDef ? defaultDef.docUrl : '');
+
             const wrapper = document.createElement('div');
             wrapper.className = 'setting-item';
 
             // Provider Name with External Link Icon (↗)
             const labelLink = document.createElement('a');
             labelLink.className = 'provider-label-link';
-            if (provider.docUrl) {
-                labelLink.href = provider.docUrl;
+            if (docUrl) {
+                labelLink.href = docUrl;
                 labelLink.target = '_blank';
                 labelLink.rel = 'noopener noreferrer';
                 labelLink.title = `Open ${provider.name} documentation`;
                 labelLink.addEventListener('click', (e) => {
                     if (this.ipcBridge) {
                         e.preventDefault();
-                        this.ipcBridge.sendMessage('openExternalUrl', { url: provider.docUrl });
+                        this.ipcBridge.sendMessage('openExternalUrl', { url: docUrl });
                     }
                 });
             }
@@ -353,7 +370,7 @@ class SettingsController {
             name.textContent = `${provider.name} API Key`;
             labelLink.appendChild(name);
 
-            if (provider.docUrl) {
+            if (docUrl) {
                 const docIconSpan = document.createElement('span');
                 docIconSpan.className = 'provider-doc-icon';
                 docIconSpan.innerHTML = window.KAI_SVGS.external_link || '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>';
