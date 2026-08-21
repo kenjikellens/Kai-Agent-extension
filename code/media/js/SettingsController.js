@@ -459,10 +459,14 @@ class SettingsController {
 
             inputContainer.appendChild(input);
             inputContainer.appendChild(toggleBtn);
-            inputContainer.appendChild(reloadBtn);
+
+            const inputRow = document.createElement('div');
+            inputRow.className = 'provider-input-row';
+            inputRow.appendChild(inputContainer);
+            inputRow.appendChild(reloadBtn);
 
             wrapper.appendChild(labelLink);
-            wrapper.appendChild(inputContainer);
+            wrapper.appendChild(inputRow);
             this.dynamicKeysList.appendChild(wrapper);
         }
     }
