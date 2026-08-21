@@ -9,16 +9,22 @@ echo ========================================================
 echo   Kai Agent - Quick Code Update
 echo ========================================================
 echo.
-
 echo [1/2] Compiling TypeScript...
-node code/node_modules/typescript/bin/tsc -p code
+pushd code
+if not exist "node_modules" (
+    echo Installing npm dependencies in extension/code...
+    call npm install
+)
+call npm run compile
 if %ERRORLEVEL% neq 0 (
+    popd
     echo.
     echo [ERROR] TypeScript compilation failed! Fix errors above.
     echo.
     pause
     exit /b %ERRORLEVEL%
 )
+popd
 
 echo [2/2] Syncing updated files to extensions directories...
 

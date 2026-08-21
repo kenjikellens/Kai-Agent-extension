@@ -32,7 +32,7 @@
   --app-surface-strong: rgba(255, 255, 255, 0.06);
   --app-surface-hover: rgba(255, 255, 255, 0.08);
   --app-surface-active: rgba(255, 255, 255, 0.12);
-  --app-btn-inset: 0 0 0 1px var(--app-surface-hover);
+  --app-btn-inset: 0 0 0 1.5px var(--app-surface-hover);
   --app-accent: var(--vscode-button-background, #007acc);
   --app-accent-hover: var(--vscode-button-hoverBackground, #0062a3);
   --app-input-bg: var(--vscode-input-background, #252526);
@@ -198,12 +198,13 @@ body {
 /* -----------------------------
    Icons / buttons
 ------------------------------ */
+/* Base interactive button element reset and smooth transition */
 button {
   border: 0 !important;
   outline: none;
   cursor: pointer;
   border-radius: var(--app-radius-sm);
-  transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
 }
 
 button:disabled {
@@ -221,6 +222,7 @@ button:disabled {
   color: currentColor;
 }
 
+/* Header action icon button */
 .icon-btn-header {
   padding: 5px;
   width: 26px;
@@ -228,6 +230,7 @@ button:disabled {
   border-radius: var(--app-radius-md);
   color: var(--app-muted);
   box-sizing: border-box;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .icon-btn-header svg {
@@ -236,19 +239,25 @@ button:disabled {
   flex-shrink: 0;
 }
 
+/* Header action icon button hover state with spread inset effect */
 .icon-btn-header:hover {
   color: var(--app-fg);
   background: var(--app-surface-hover);
+  box-shadow: var(--app-btn-inset);
 }
 
+/* Generic icon button container */
 .icon-btn {
   padding: 2px 6px;
   font-size: 0.75rem;
   border-radius: 3px;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
+/* Generic icon button hover state with spread inset effect */
 .icon-btn:hover {
   background: var(--app-surface-hover);
+  box-shadow: var(--app-btn-inset);
 }
 
 #send-btn {
@@ -1361,14 +1370,14 @@ button:disabled {
   margin: 0;
 }
 
-/* Settings & Help category wrapper - Smooth 250ms morph with ultra-subtle darker background (#1b1b1b) and borderless container */
+/* Settings & Help category wrapper - Smooth 250ms morph with slightly lighter card background and borderless container */
 .settings-category {
   position: relative;
   margin: 0;
   padding: 0;
   border: none !important;
   border-radius: 12px;
-  background: #1b1b1b;
+  background: rgba(255, 255, 255, 0.04);
   box-sizing: border-box;
   width: 100%;
   overflow: hidden;
@@ -1529,10 +1538,12 @@ button:disabled {
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
+/* Borderless hover-only button hover state with spread inset effect */
 .btn-hover-only:hover,
 .btn-hover-only:focus-visible {
   background: var(--app-surface-hover);
   border-color: var(--app-border);
+  box-shadow: var(--app-btn-inset);
 }
 
 /* Provider Label Link with External Top-Right Arrow */

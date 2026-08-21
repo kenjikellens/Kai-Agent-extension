@@ -81,14 +81,18 @@ export class LMStudioClient implements ILLMProvider {
     }
 
     /**
-     * Fetches local LM Studio models via HTTP GET /models with IPv4 and path fallbacks.
+     * Probes local LM Studio REST endpoints (v1 and v0 API routes) to discover available chat models.
+     * Updates model availability across the extension provider state.
      */
     public async getLMStudioModels(): Promise<string[]> {
         const { hostname, port, pathPrefix } = this.parseServerUrl();
         const urlsToTry = [
             `http://127.0.0.1:${port || 1234}/v1/models`,
+            `http://127.0.0.1:${port || 1234}/api/v0/models`,
             `http://127.0.0.1:${port || 1234}/models`,
             `http://localhost:${port || 1234}/v1/models`,
+            `http://localhost:${port || 1234}/api/v0/models`,
+
             `http://localhost:${port || 1234}/models`,
             `http://${hostname}:${port}${pathPrefix}/models`
         ];
