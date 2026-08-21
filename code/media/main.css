@@ -949,8 +949,11 @@ button:disabled {
   min-width: 0;
 }
 
+/* Container for Model Selector dropdown sized compactly to fit content without expanding across toolbar */
 #model-dropdown-container {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
+  width: auto;
+  max-width: max-content;
 }
 
 /* Primary Model Selector Dropdown Trigger Button - Full rounded pill */
@@ -1049,15 +1052,15 @@ button:disabled {
   flex-shrink: 0;
 }
 
-/* Options menu container for the Model Selector Dropdown - Flush 0-padding container with 12px border radius */
+/* Options menu container for the Model Selector Dropdown with 175px reserved right-side boundary for thinking flyout */
 .dropdown-menu {
   position: absolute;
   left: 0;
   bottom: calc(100% + 6px);
   z-index: 1000;
-  width: calc(100cqw - 195px);
   min-width: 140px;
-  max-width: calc(100cqw - 195px);
+  width: max-content;
+  max-width: calc(100cqw - 175px);
   padding: 0;
   box-sizing: border-box;
   background: var(--app-dropdown-bg);
