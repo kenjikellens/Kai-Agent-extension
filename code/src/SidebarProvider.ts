@@ -280,14 +280,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         this._currentStreamingText = '';
         this._currentStreamingMessages = messages;
 
-        // If an LM Studio model is selected, switch/load it on send
-        if (model && model !== 'local-model' && !model.toLowerCase().startsWith('gemini')) {
-            const isFreeProvider = FREE_PROVIDERS.some(p => p.models.includes(model));
-            if (!isFreeProvider) {
-                await this._handleSwitchLMStudioModel(model);
-            }
-        }
-
         try {
             const userPrompt = messages.length > 0 ? messages[messages.length - 1].content : '';
             const history = messages.slice(0, -1);
