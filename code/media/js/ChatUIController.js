@@ -974,17 +974,220 @@ class ChatUIController {
         }
     }
 
+                    statusDiv.appendChild(dropdownDiv);
+                }
+            }
+        } else if (progress.progressType === 'agent_warning') {
+            const warning = progress.output || 'The agent stopped before completing the task.';
+            appState.addUiEvent({ type: 'system', content: warning });
+            this.appendMessage('system', warning);
+        }
+        this.scrollToBottom();
+    }
+
+    /**
+     * Translates tool name and arguments into SVG icons and status header HTML.
+     * @param {string} tool Tool identifier name.
+     * @param {string} targetName Tool argument target name.
+     * @param {string} state Execution state ('start', 'success', 'error').
+     * @returns {string} Status header HTML string.
+     */
+    getToolDescription(tool, targetName, state) {
+        const svgs = window.KAI_SVGS || (typeof KAI_CONSTANTS !== 'undefined' ? KAI_CONSTANTS.DEFAULT_SVGS : {}) || {};
+        const iconSvg = svgs[tool] || svgs['default_tool'] || '';
+        let verb = '';
+        
+        switch (tool) {
+            case 'read_file':
+                verb = state === 'start' ? 'analysing' : (state === 'success' ? 'analysed' : 'failed analysing');
+                break;
+            case 'write_file':
+                verb = state === 'start' ? 'creating' : (state === 'success' ? 'created' : 'failed creating');
+                break;
+            case 'edit_file':
+            case 'replace_file_content':
+            case 'multi_replace_file_content':
+                verb = state === 'start' ? 'editing' : (state === 'success' ? 'edited' : 'failed editing');
+                break;
+            case 'list_dir':
+                verb = state === 'start' ? 'scanning' : (state === 'success' ? 'scanned' : 'failed scanning');
+                break;
+            case 'grep_search':
+            case 'search_web':
+            case 'web_search':
+                verb = state === 'start' ? 'searching' : (state === 'success' ? 'searched' : 'failed searching');
+                break;
+            case 'symbol_search':
+                verb = state === 'start' ? 'indexing symbols' : (state === 'success' ? 'found symbols' : 'failed symbol search');
+                break;
+            case 'get_diagnostics':
+                verb = state === 'start' ? 'checking diagnostics' : (state === 'success' ? 'checked diagnostics' : 'failed diagnostics');
+                break;
+            case 'fetch_url':
+                verb = state === 'start' ? 'fetching' : (state === 'success' ? 'fetched' : 'failed fetching');
+                break;
+            case 'run_command':
+                verb = state === 'start' ? 'running' : (state === 'success' ? 'ran' : 'failed running');
+                break;
+            case 'delete_item':
+                verb = state === 'start' ? 'deleting' : (state === 'success' ? 'deleted' : 'failed deleting');
+                break;
+            case 'utility_tools':
+                verb = state === 'start' ? 'running utility' : (state === 'success' ? 'completed utility' : 'failed utility');
+                break;
+            case 'get_time':
+                verb = state === 'start' ? 'checking time' : (state === 'success' ? 'checked time' : 'failed time check');
+                break;
+            case 'calculate':
+                verb = state === 'start' ? 'calculating' : (state === 'success' ? 'calculated' : 'failed calculating');
+                break;
+            case 'unit_converter':
+                verb = state === 'start' ? 'converting' : (state === 'success' ? 'converted' : 'failed converting');
+                break;
+            case 'text_stats':
+                verb = state === 'start' ? 'analysing text' : (state === 'success' ? 'analysed text' : 'failed text analysis');
+                break;
+            case 'uuid_random':
+                verb = state === 'start' ? 'generating' : (state === 'success' ? 'generated' : 'failed generating');
+                break;
+            default:
+                verb = state === 'start' ? 'running' : (state === 'success' ? 'completed' : 'failed');
+        }
+
+        const prefixSvg = state === 'start' 
+            ? (svgs['spinner'] || '<span class="thinking-spinner"></span>') 
+            : (state === 'success' 
+                ? (svgs['success'] || '') 
+                : (svgs['error'] || ''));
+        
+        let target = targetName || '';
+        if (tool === 'run_command' && target.length > 40) {
+            target = target.substring(0, 37) + '...';
+        }
+
+        return `
+            <div class="tool-call-header">
+                <div class="tool-call-title">
+                    ${prefixSvg}${iconSvg} ${verb} ${target ? `<code>${this.formatter.escapeHtml(target)}</code>` : ''}
+                </div>
+                <i class="codicon codicon-chevron-right tool-chevron"></i>
+            </div>
+        `;
+    }
+
+    /**
+     * Appends dynamic activity status card (spinner + status text) into chat container.
+     * @param {string} [statusText='Processing...'] Initial status message.
+     */
+    showActivityStatus(statusText = 'Processing...') {
+        this.removeActivityStatus();
+
+        const statusDiv = document.createElement('div');
+        statusDiv.id = 'activity-status-container';
+        statusDiv.className = 'activity-status-card';
+        statusDiv.innerHTML = `
+            <span class="thinking-spinner"></span>
+            <span class="activity-status-text">${this.formatter.escapeHtml(statusText)}</span>
+        `;
+
+        if (this.chatContainer) {
+            this.chatContainer.appendChild(statusDiv);
+            this.scrollToBottom();
+        }
+    }
+
+    /**
+     * Updates the text inside the active activity status card.
+     * @param {string} statusText New status message.
+     */
+    updateActivityStatus(statusText) {
+        if (!statusText) return;
+        const statusEl = document.getElementById('activity-status-container');
+        if (statusEl) {
+            const textEl = statusEl.querySelector('.activity-status-text');
+            if (textEl) {
+                textEl.textContent = statusText;
+            }
+        } else {
+            this.showActivityStatus(statusText);
+        }
+    }
+
+    /**
+     * Removes active activity status element.
+     */
+    removeActivityStatus() {
+        const statusEl = document.getElementById('activity-status-container');
+        if (statusEl) {
+            statusEl.remove();
+        }
+    }
+
+    /**
+     * Scrolls chat container element to bottom.
+     */
+    scrollToBottom() {
+        if (this.chatContainer) {
+            this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
+        }
+    }
+
+    /**
+     * Toggles UI control lock state during agent generation.
+     * @param {boolean} isLoading True when generation is active.
+     * @param {AppState} appState Active state instance.
+     */
+    setUiLoading(isLoading, appState) {
+        if (appState) {
+            appState.isWaitingForResponse = isLoading;
+        }
+        if (this.messageInput) {
+            this.messageInput.disabled = isLoading;
+        }
+        if (this.sendBtn) {
+            this.sendBtn.disabled = false;
+            if (isLoading) {
+                this.sendBtn.innerHTML = window.KAI_SVGS['stop'] || '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>';
+                this.sendBtn.title = 'Stop generation';
+                this.showActivityStatus('Processing...');
+            } else {
+                this.sendBtn.innerHTML = window.KAI_SVGS['send'] || '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>';
+                this.sendBtn.title = 'Send message';
+                this.removeActivityStatus();
+            }
+        }
+    }
+
+    /**
+     * Clears all content elements inside chat container and displays Welcome Hero.
+     */
+    clearChatContainer() {
+        this.resetAssistantStream();
+        if (this.chatContainer) {
+            this.chatContainer.innerHTML = '';
+            this.renderWelcomeHero();
+        }
+    }
+
     /**
      * Renders UI event records or message fallback for session loading.
      * @param {Array<object>} uiEvents UI events array.
      * @param {Array<object>} messages Fallback messages array.
      */
     renderUiEvents(uiEvents, messages) {
-        this.clearChatContainer();
+        if (this.chatContainer) {
+            this.chatContainer.innerHTML = '';
+        }
         this.resetAssistantStream();
 
         const safeUiEvents = Array.isArray(uiEvents) ? uiEvents : [];
         const safeMessages = Array.isArray(messages) ? messages : [];
+
+        if (safeUiEvents.length === 0 && safeMessages.length === 0) {
+            this.renderWelcomeHero();
+            return;
+        }
+
         const eventsToRender = safeUiEvents.length > 0 ? safeUiEvents : safeMessages.map(m => ({
             type: m.role,
             text: m.content,
@@ -1003,11 +1206,13 @@ class ChatUIController {
                     isThinkingCapable: evt.isThinkingCapable,
                     reasoningEffort: evt.reasoningEffort
                 });
+            } else if (evt.type === 'system') {
+                this.appendMessage('system', evt.content || evt.text || '');
             } else if (evt.type === 'file-summary' || evt.role === 'file-summary') {
                 this.appendMessage('file-summary', typeof evt.files === 'string' ? evt.files : JSON.stringify(evt.files || evt.content || []));
             } else if (evt.type === 'tool') {
                 const statusDiv = document.createElement('div');
-                statusDiv.id = evt.toolId;
+                if (evt.toolId) statusDiv.id = evt.toolId;
                 statusDiv.className = `tool-status-row ${evt.state === 'error' ? 'errored' : (evt.state === 'success' ? 'completed' : 'in-progress')}`;
                 statusDiv.innerHTML = this.getToolDescription(evt.tool, evt.fileName, evt.state === 'error' ? 'error' : 'success');
                 if (evt.output) {
@@ -1027,11 +1232,6 @@ class ChatUIController {
             this.mermaidRenderer.renderDiagrams(this.chatContainer);
         }
     }
-
-    /**
-     * Swaps active content view in the main area (Chat, History, or Settings).
-     * @param {'chat'|'history'|'settings'} viewName Target view name.
-     */
     showView(viewName) {
         if (this.settingsController && typeof this.settingsController.hideKeysOverlay === 'function') {
             this.settingsController.hideKeysOverlay();
