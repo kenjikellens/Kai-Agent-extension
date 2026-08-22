@@ -6,6 +6,7 @@
     // 1. Instantiate Core State and Utility Modules
     const appState = new AppState();
     const formatter = new MarkdownFormatter();
+    const mermaidRenderer = new MermaidRenderer();
     const ipcBridge = new WebviewIPCBridge();
     const fileSummaryWidget = new FileSummaryWidget();
     const sessionRepository = new SessionRepository(ipcBridge);
@@ -30,7 +31,8 @@
         fileSummaryWidget,
         settingsController,
         helpModalController,
-        modelDropdownController
+        modelDropdownController,
+        mermaidRenderer
     );
 
     // 3. Mode Manager (3 workspace modes in VS Code: ask, agent, planning)
@@ -329,9 +331,12 @@
         }
 
         if (message.modifiedFiles && message.modifiedFiles.length > 0) {
-            appState.addMessage({ role: 'file-summary', content: JSON.stringify(message.modifiedFiles) });
             appState.addUiEvent({ type: 'file-summary', files: message.modifiedFiles });
             chatUIController.appendMessage('file-summary', JSON.stringify(message.modifiedFiles));
+        }
+
+        if (mermaidRenderer && chatUIController.chatContainer) {
+            mermaidRenderer.renderDiagrams(chatUIController.chatContainer);
         }
 
         saveCurrentChat();

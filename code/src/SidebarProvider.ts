@@ -703,6 +703,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         const sessionRepositoryUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'SessionRepository.js'));
         const settingsRepositoryUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'SettingsRepository.js'));
         const appStateUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'AppState.js'));
+        const mermaidVendorUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'vendor', 'mermaid.min.js'));
+        const mermaidRendererUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'MermaidRenderer.js'));
         const markdownFormatterUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'MarkdownFormatter.js'));
         const ipcBridgeUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'WebviewIPCBridge.js'));
         const fileSummaryWidgetUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'js', 'FileSummaryWidget.js'));
@@ -970,6 +972,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                 <script nonce="${nonce}" src="${sessionRepositoryUri}"></script>
                 <script nonce="${nonce}" src="${settingsRepositoryUri}"></script>
                 <script nonce="${nonce}" src="${appStateUri}"></script>
+                <script nonce="${nonce}" src="${mermaidVendorUri}"></script>
+                <script nonce="${nonce}" src="${mermaidRendererUri}"></script>
                 <script nonce="${nonce}" src="${markdownFormatterUri}"></script>
                 <script nonce="${nonce}" src="${ipcBridgeUri}"></script>
                 <script nonce="${nonce}" src="${fileSummaryWidgetUri}"></script>
