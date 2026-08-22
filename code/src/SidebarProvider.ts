@@ -421,6 +421,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             this._view.webview.postMessage({
                 type: 'connectionStatus',
                 connected: lmStudioConnected,
+                geminiConnected: isGeminiValid,
                 model: activeModel,
                 lmStudioModels: lmModels,
                 geminiModels: geminiModels,

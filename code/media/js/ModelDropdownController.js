@@ -318,7 +318,7 @@ class ModelDropdownController {
                 renderLMStudioItems();
             } else {
                 displayItems.forEach(itemData => {
-                    this.renderModelItem(itemData, isModelConnectedFn, contentDiv, isLMStudio);
+                    this.renderModelItem(itemData, isModelConnectedFn, contentDiv, false);
                 });
             }
         }

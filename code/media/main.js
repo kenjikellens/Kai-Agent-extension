@@ -22,10 +22,6 @@
             saveCurrentChat();
         }, ipcBridge);
 
-        const historyManager = new HistoryManager(ipcBridge, (viewName) => {
-            chatUIController.showView(viewName);
-        });
-
         const chatUIController = new ChatUIController(
             formatter,
             ipcBridge,
@@ -35,6 +31,13 @@
             modelDropdownController,
             mermaidRenderer
         );
+        window.chatUIController = chatUIController;
+
+        const historyManager = new HistoryManager(ipcBridge, (viewName) => {
+            if (chatUIController && typeof chatUIController.showView === 'function') {
+                chatUIController.showView(viewName);
+            }
+        });
 
         // 3. Mode Manager (3 workspace modes in VS Code: ask, agent, planning)
         const modeManager = new ModeManager({
