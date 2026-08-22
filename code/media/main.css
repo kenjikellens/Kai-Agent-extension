@@ -1152,8 +1152,8 @@ button:disabled {
   scrollbar-width: none;
 }
 
-/* Individual sort chip button */
-.sort-chip-btn {
+/* Compact sort button modifier reusing the secondary-btn design system base */
+.secondary-btn--sort {
   display: inline-flex;
   align-items: center;
   gap: 3px;
@@ -1170,15 +1170,15 @@ button:disabled {
   transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
-/* Hover state for sort chip button */
-.sort-chip-btn:hover {
+/* Hover state for secondary sort button modifier */
+.secondary-btn--sort:hover {
   background: var(--app-surface-hover);
   color: var(--app-fg);
   border-color: var(--app-border-subtle);
 }
 
-/* Active state for sort chip button indicating selected sorting criterion */
-.sort-chip-btn.active {
+/* Active state for secondary sort button modifier */
+.secondary-btn--sort.active {
   background: rgba(0, 122, 204, 0.2);
   color: var(--main-link-color, #3794ff);
   border-color: rgba(0, 122, 204, 0.4);
