@@ -160,19 +160,6 @@
         sendBtn.addEventListener('click', sendMessage);
     }
 
-    if (atMentionTriggerBtn && contextOptionsMenu) {
-        atMentionTriggerBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            contextOptionsMenu.classList.toggle('hidden');
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!contextOptionsMenu.contains(e.target) && !atMentionTriggerBtn.contains(e.target)) {
-                contextOptionsMenu.classList.add('hidden');
-            }
-        });
-    }
-
     if (newChatBtn) {
         newChatBtn.addEventListener('click', () => {
             if (appState.isWaitingForResponse) {
