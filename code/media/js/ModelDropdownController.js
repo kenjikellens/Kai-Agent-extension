@@ -13,10 +13,12 @@ class ModelDropdownController {
      * Initializes DOM references, initial dropdown values, and listeners.
      * @param {MarkdownFormatter} formatter Formatter instance.
      * @param {Function} onSelect Callback when a model selection changes in the Model Selector Dropdown.
+     * @param {WebviewIPCBridge} [ipcBridge] Webview IPC bridge instance for triggering model loads.
      */
-    constructor(formatter, onSelect) {
+    constructor(formatter, onSelect, ipcBridge = null) {
         this.formatter = formatter;
         this.onSelect = onSelect;
+        this.ipcBridge = ipcBridge;
         this.selectedModelValue = localStorage.getItem('kai.selectedModel') || 'local-model';
         this.accordionStates = {};
         this.freeProvidersConfig = [...KAI_CONSTANTS.DEFAULT_FREE_PROVIDERS];
@@ -306,7 +308,7 @@ class ModelDropdownController {
 
                     const sorted = this.sortLMStudioItems(displayItems, currentSortKey, currentSortDir);
                     sorted.forEach(itemData => {
-                        this.renderModelItem(itemData, isModelConnectedFn, itemsContainer);
+                        this.renderModelItem(itemData, isModelConnectedFn, itemsContainer, true);
                     });
                 };
 
@@ -315,7 +317,7 @@ class ModelDropdownController {
                 renderLMStudioItems();
             } else {
                 displayItems.forEach(itemData => {
-                    this.renderModelItem(itemData, isModelConnectedFn, contentDiv);
+                    this.renderModelItem(itemData, isModelConnectedFn, contentDiv, isLMStudio);
                 });
             }
         }
@@ -374,8 +376,9 @@ class ModelDropdownController {
      * @param {object} itemData Item descriptor with value, label, and rawModel.
      * @param {Function|null} isModelConnectedFn Model connection check callback.
      * @param {HTMLElement} targetContainer Destination container element.
+     * @param {boolean} [isLMStudio=false] Whether this item is a local LM Studio model.
      */
-    renderModelItem(itemData, isModelConnectedFn, targetContainer) {
+    renderModelItem(itemData, isModelConnectedFn, targetContainer, isLMStudio = false) {
         const caps = ThinkingStateFormatter.getCapabilitiesState(itemData.rawModel);
         const hasFlyout = caps.hasThinkingToggle || (caps.hasReasoningEffort && Array.isArray(caps.effortOptions) && caps.effortOptions.length > 0);
 
@@ -617,8 +620,12 @@ class ModelDropdownController {
             this.closeActiveFlyoutImmediately();
             this.dropdownOptionsMenu.classList.add('hidden');
 
+            if (isLMStudio && this.ipcBridge && typeof this.ipcBridge.switchLMStudioModel === 'function') {
+                this.ipcBridge.switchLMStudioModel(itemData.rawModel || itemData.value);
+            }
+
             if (this.onSelect) {
-                this.onSelect(itemData.value);
+                this.onSelect(itemData.value, isLMStudio);
             }
         };
 
