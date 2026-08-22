@@ -9,7 +9,8 @@ class SessionRepository {
      */
     constructor(ipcBridge = null) {
         this.ipcBridge = ipcBridge;
-        this.storageKey = 'kai.savedChats';
+        this.storageKey = 'kai.savedFullSessions';
+        this.legacyStorageKey = 'kai.savedChats';
         this._isDirty = false;
         this._pendingSession = null;
         this._debounceTimer = null;
@@ -21,7 +22,21 @@ class SessionRepository {
      */
     getAllSessions() {
         try {
-            return JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+            const storedRaw = localStorage.getItem(this.storageKey);
+            if (storedRaw !== null) {
+                const stored = JSON.parse(storedRaw);
+                return Array.isArray(stored) ? stored : [];
+            }
+
+            const legacy = JSON.parse(localStorage.getItem(this.legacyStorageKey) || '[]');
+            const completeLegacy = Array.isArray(legacy)
+                ? legacy.filter(session => session && session.id &&
+                    (Array.isArray(session.messages) || Array.isArray(session.uiEvents)))
+                : [];
+            if (completeLegacy.length > 0) {
+                localStorage.setItem(this.storageKey, JSON.stringify(completeLegacy));
+            }
+            return completeLegacy;
         } catch (e) {
             console.error('SessionRepository: failed to read saved chats', e);
             return [];
@@ -73,13 +88,22 @@ class SessionRepository {
      */
     saveSession(session) {
         if (!session || !session.id) return;
-        if (!session.messages || session.messages.length === 0) return;
+        const hasMessages = Array.isArray(session.messages);
+        const hasUiEvents = Array.isArray(session.uiEvents);
+        if (!hasMessages && !hasUiEvents) return;
         const all = this.getAllSessions();
         const index = all.findIndex(c => c.id === session.id);
+        const previous = index >= 0 ? all[index] : {};
+        const completeSession = {
+            ...previous,
+            ...session,
+            messages: hasMessages ? session.messages : (previous.messages || []),
+            uiEvents: hasUiEvents ? session.uiEvents : (previous.uiEvents || [])
+        };
         if (index >= 0) {
-            all[index] = session;
+            all[index] = completeSession;
         } else {
-            all.unshift(session);
+            all.unshift(completeSession);
         }
         try {
             localStorage.setItem(this.storageKey, JSON.stringify(all));
@@ -88,7 +112,7 @@ class SessionRepository {
         }
 
         if (this.ipcBridge && typeof this.ipcBridge.saveChat === 'function') {
-            this.ipcBridge.saveChat(session);
+            this.ipcBridge.saveChat(completeSession);
         }
     }
 

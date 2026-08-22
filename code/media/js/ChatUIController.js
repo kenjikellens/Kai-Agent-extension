@@ -983,7 +983,9 @@ class ChatUIController {
         this.clearChatContainer();
         this.resetAssistantStream();
 
-        const eventsToRender = (uiEvents && uiEvents.length > 0) ? uiEvents : (messages || []).map(m => ({
+        const safeUiEvents = Array.isArray(uiEvents) ? uiEvents : [];
+        const safeMessages = Array.isArray(messages) ? messages : [];
+        const eventsToRender = safeUiEvents.length > 0 ? safeUiEvents : safeMessages.map(m => ({
             type: m.role,
             text: m.content,
             content: m.content,
@@ -991,6 +993,7 @@ class ChatUIController {
         }));
 
         eventsToRender.forEach(evt => {
+            if (!evt || typeof evt !== 'object') return;
             if (evt.type === 'user' || evt.role === 'user') {
                 this.appendMessage('user', evt.text || evt.content || '');
             } else if (evt.type === 'assistant' || evt.role === 'assistant') {

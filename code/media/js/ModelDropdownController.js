@@ -644,8 +644,9 @@ class ModelDropdownController {
         if (!this.dropdownOptionsMenu) return;
         this.dropdownOptionsMenu.innerHTML = '';
 
-        const defaultGemini = KAI_CONSTANTS.DEFAULT_GEMINI_MODELS;
-        const defaultProviders = KAI_CONSTANTS.DEFAULT_FREE_PROVIDERS || [];
+        const defaultGemini = KAI_CONSTANTS.DEFAULT_GEMINI_MODELS || [];
+        const defaultProviders = KAI_CONSTANTS.DEFAULT_PROVIDERS_WITH_MODELS || [];
+        const freeProviders = KAI_CONSTANTS.DEFAULT_FREE_PROVIDERS || [];
 
         let addedAny = false;
 
@@ -656,19 +657,24 @@ class ModelDropdownController {
             addedAny = true;
         }
 
-        defaultProviders.forEach(p => {
+        freeProviders.forEach(p => {
             const key = (localStorage.getItem(`kai.${p.configKey}`) || '').trim();
             if (key) {
-                const isExpanded = this.selectedModelValue && p.models.includes(this.selectedModelValue);
-                const cleanName = p.name.replace(/\s*\([^)]*\)/g, '').trim();
-                this.createAccordionGroup(cleanName, p.models, isExpanded);
-                addedAny = true;
+                const matchedGroup = defaultProviders.find(group => group.name && group.name.includes(p.name));
+                const models = matchedGroup && Array.isArray(matchedGroup.models) ? matchedGroup.models : [];
+                if (models.length > 0) {
+                    const isExpanded = this.selectedModelValue && models.includes(this.selectedModelValue);
+                    const cleanName = p.name.replace(/\s*\([^)]*\)/g, '').trim();
+                    this.createAccordionGroup(cleanName, models, isExpanded);
+                    addedAny = true;
+                }
             }
         });
 
         // Check if a local LM Studio model is saved or available
         const savedModel = (localStorage.getItem('kai.selectedModel') || '').trim();
-        const isLocalSaved = savedModel && savedModel !== 'local-model' && !savedModel.toLowerCase().startsWith('gemini') && !defaultProviders.some(p => p.models.includes(savedModel));
+        const allCloudModels = defaultProviders.flatMap(provider => Array.isArray(provider.models) ? provider.models : []);
+        const isLocalSaved = savedModel && savedModel !== 'local-model' && !savedModel.toLowerCase().startsWith('gemini') && !allCloudModels.includes(savedModel);
         if (isLocalSaved) {
             const i18n = window.KAI_I18N || {};
             const headerTitle = i18n.lmStudioHeader || 'LM Studio';
@@ -707,7 +713,8 @@ class ModelDropdownController {
             }
             const freeProviders = message.freeProviders || [];
             for (const provider of freeProviders) {
-                if (provider.models.includes(bare)) {
+                const providerModels = Array.isArray(provider.models) ? provider.models : [];
+                if (providerModels.includes(bare)) {
                     const key = (localStorage.getItem(`kai.${provider.configKey}`) || '').trim();
                     return !!(provider.apiKey || key);
                 }
@@ -749,10 +756,11 @@ class ModelDropdownController {
         this.freeProvidersConfig = freeProviders;
         for (const provider of freeProviders) {
             const hasProviderKey = Boolean(provider.apiKey || (localStorage.getItem(`kai.${provider.configKey}`) || '').trim());
-            if (hasProviderKey) {
-                const isExpanded = this.selectedModelValue && provider.models.includes(this.selectedModelValue);
+            const providerModels = Array.isArray(provider.models) ? provider.models : [];
+            if (hasProviderKey && providerModels.length > 0) {
+                const isExpanded = this.selectedModelValue && providerModels.includes(this.selectedModelValue);
                 const cleanName = provider.name.replace(/\s*\([^)]*\)/g, '').trim();
-                this.createAccordionGroup(cleanName, provider.models, isExpanded, isModelConnected);
+                this.createAccordionGroup(cleanName, providerModels, isExpanded, isModelConnected);
                 addedCategories++;
             }
         }

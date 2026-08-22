@@ -61,11 +61,12 @@ export class SessionStore {
             return;
         }
         const chatsMap = this.memento.get<Record<string, ChatSessionRecord>>(SessionStore.STORAGE_KEY) || {};
+        const previous = chatsMap[chat.id];
         chatsMap[chat.id] = {
             id: chat.id,
             title: chat.title || 'New Chat',
-            messages: chat.messages || [],
-            uiEvents: chat.uiEvents || [],
+            messages: Array.isArray(chat.messages) ? chat.messages : (previous?.messages || []),
+            uiEvents: Array.isArray(chat.uiEvents) ? chat.uiEvents : (previous?.uiEvents || []),
             model: chat.model || '',
             thinking: chat.thinking !== false,
             timestamp: chat.timestamp || Date.now()

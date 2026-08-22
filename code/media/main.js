@@ -75,9 +75,6 @@
     const messageInput = document.getElementById('message-input');
     const sendBtn = document.getElementById('send-btn');
     const newChatBtn = document.getElementById('new-chat-btn');
-    const atMentionTriggerBtn = document.getElementById('at-mention-trigger-btn');
-    const contextOptionsMenu = document.getElementById('context-options-menu');
-
     // Delegate Proceed button inside plan card: switches mode to agent and executes
     if (chatUIController.chatContainer) {
         chatUIController.chatContainer.addEventListener('click', (e) => {
@@ -244,7 +241,12 @@
             payload.progressType = payload.type;
         }
         chatUIController.handleAgentProgress(payload, appState);
-        sessionRepository.markDirty(appState.toChatPayload(modelDropdownController.getSelectedModelDetails().thinking));
+        const session = appState.toChatPayload(modelDropdownController.getSelectedModelDetails().thinking);
+        if (payload.progressType === 'tool_start' || payload.progressType === 'tool_end') {
+            sessionRepository.saveSession(session);
+        } else {
+            sessionRepository.markDirty(session);
+        }
     };
 
     ipcBridge.on('agentProgress', handleAgentProgress);
@@ -306,7 +308,10 @@
         }
 
         const lastEvt = appState.uiEvents[appState.uiEvents.length - 1];
-        if (replyContent && (!lastEvt || lastEvt.type !== 'assistant')) {
+        if (replyContent && lastEvt && lastEvt.type === 'assistant' && lastEvt.isStreaming) {
+            appState.updateOrAddAssistantUiEvent(replyContent, appState.activeMode, effectiveMeta);
+            appState.finalizeAssistantUiEvent();
+        } else if (replyContent) {
             appState.addUiEvent({
                 type: 'assistant',
                 content: replyContent,
@@ -342,11 +347,18 @@
     });
 
     ipcBridge.on('chatHistory', (message) => {
-        historyManager.renderHistoryList(message.chats, appState.isWaitingForResponse);
+        const chats = (message && Array.isArray(message.chats)) ? message.chats : [];
+        try {
+            localStorage.setItem('kai.savedChatsSummary', JSON.stringify(chats));
+        } catch (e) {}
+        historyManager.renderHistoryList(chats, appState.isWaitingForResponse);
     });
 
     ipcBridge.on('loadChat', (message) => {
-        loadChatSession(message.chat);
+        if (message && message.chat) {
+            sessionRepository.saveSession(message.chat);
+            loadChatSession(message.chat);
+        }
     });
 
     // Start periodic server connection health checks
