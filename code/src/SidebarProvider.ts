@@ -9,6 +9,7 @@ import { LMStudioManifestParser } from './providers/LMStudioManifestParser';
 import { I18nManager } from './i18n';
 import { SessionStore } from './SessionStore';
 import { EditorContextProvider } from './EditorContextProvider';
+import { TurnSnapshotManager } from './services/TurnSnapshotManager';
 
 /**
  * SidebarProvider implements the vscode.WebviewViewProvider to govern the behavior,
@@ -156,7 +157,17 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     break;
                 }
                 case 'deleteChat': {
+                    if (data.chatId) {
+                        TurnSnapshotManager.getInstance().clearTurn(data.chatId);
+                    }
                     await this._handleDeleteChat(data.chatId);
+                    break;
+                }
+                case 'rollbackTurn': {
+                    if (data.turnIds || data.chatId) {
+                        const ids = data.turnIds || [data.chatId];
+                        await TurnSnapshotManager.getInstance().rollbackTurn(ids);
+                    }
                     break;
                 }
                 case 'loadChat': {

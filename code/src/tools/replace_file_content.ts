@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Tool, ToolContext, FunctionDeclaration, resolveSafePath } from './Tool';
 import { FileReplacementHelper } from './FileReplacementHelper';
+import { TurnSnapshotManager } from '../services/TurnSnapshotManager';
 
 /**
  * Tool for replacing a single contiguous block of lines in a file.
@@ -62,6 +63,9 @@ export class ReplaceFileContentTool extends Tool {
         if (error) {
             return error;
         }
+
+        const turnId = context.turnId || 'default';
+        await TurnSnapshotManager.getInstance().recordBeforeMutation(turnId, targetPath);
 
         await fs.promises.writeFile(targetPath, lines.join('\n'), 'utf8');
         vscode.window.showInformationMessage(`Kai: Replaced content in ${path.basename(args.path)}`);

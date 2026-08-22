@@ -1517,6 +1517,15 @@ class WebviewIPCBridge {
     }
 
     /**
+     * Triggers turn snapshot rollback for specified turn IDs or active chat.
+     * @param {string|Array<string>} turnIds Turn ID or list of turn IDs to rollback.
+     */
+    rollbackTurn(turnIds) {
+        const ids = Array.isArray(turnIds) ? turnIds : [turnIds];
+        this.postMessage({ type: 'rollbackTurn', turnIds: ids });
+    }
+
+    /**
      * Triggers abort signal to stop active generation loop.
      */
     abort() {

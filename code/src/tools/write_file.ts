@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Tool, ToolContext, FunctionDeclaration, resolveSafePath } from './Tool';
 import { FileToolUtils } from './FileToolUtils';
+import { TurnSnapshotManager } from '../services/TurnSnapshotManager';
 
 /**
  * Tool for writing or creating new file content within the workspace.
@@ -43,6 +44,9 @@ export class WriteFileTool extends Tool {
      */
     public async execute(args: { path: string; content: string }, context: ToolContext): Promise<string> {
         const targetPath = resolveSafePath(args.path, context.workspacePath);
+        const turnId = context.turnId || 'default';
+        await TurnSnapshotManager.getInstance().recordBeforeMutation(turnId, targetPath);
+
         await FileToolUtils.ensureParentDirExists(targetPath);
 
         await fs.promises.writeFile(targetPath, args.content, 'utf8');

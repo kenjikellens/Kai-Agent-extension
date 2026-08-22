@@ -67,10 +67,12 @@ export class AgentExecutor {
         planningMode: boolean = false,
         attachedFiles?: any[],
         maxContextTokens: number = 16000,
-        mode: string = 'agent'
+        mode: string = 'agent',
+        turnId?: string
     ): Promise<{ reply: string; messages: { role: string; content: string }[]; modifiedFiles: string[] }> {
         // Deep copy history to avoid mutating the original until loop is complete
         let messages: ContextMessage[] = [...chatHistory];
+        const activeTurnId = turnId || `turn-${Date.now()}`;
         this.contextManager = new ContextManager(maxContextTokens);
         const provider = LLMProviderFactory.getProvider(model, this.serverUrl);
         const useNativeFunctionCalling = Boolean(
@@ -297,7 +299,7 @@ export class AgentExecutor {
             // Execute the tool polymorphically
             let toolResult = '';
             try {
-                toolResult = await this.executeTool(toolCall.name, toolCall.args);
+                toolResult = await this.executeTool(toolCall.name, toolCall.args, activeTurnId);
             } catch (err: any) {
                 toolResult = `[Error executing tool ${toolCall.name}]: ${err.message || err}`;
             }
@@ -582,7 +584,7 @@ export class AgentExecutor {
      * @param args The arguments object parsed from the JSON blocks.
      * @returns A promise resolving to the execution result text.
      */
-    private async executeTool(tool: string, args: any): Promise<string> {
+    private async executeTool(tool: string, args: any, turnId?: string): Promise<string> {
         const matchedTool = this.tools.find((t) => t.name === tool);
         if (!matchedTool) {
             throw new Error(`Unknown tool: ${tool}`);
@@ -590,7 +592,8 @@ export class AgentExecutor {
 
         let result = await matchedTool.execute(args, {
             workspacePath: this.workspacePath,
-            extensionPath: this.extensionPath
+            extensionPath: this.extensionPath,
+            turnId: turnId
         });
         const absoluteMaxBytes = 10000;
         if (Buffer.byteLength(result, 'utf8') > absoluteMaxBytes) {
