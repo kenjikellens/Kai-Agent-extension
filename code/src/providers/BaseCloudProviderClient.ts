@@ -52,6 +52,14 @@ export abstract class BaseCloudProviderClient implements ILLMProvider {
      * @param model Namespaced model ID.
      * @returns Bare model ID.
      */
+    /**
+     * Virtual method allowing providers to inject provider-specific HTTP headers.
+     * @returns Custom headers key-value map.
+     */
+    protected getCustomHeaders(): Record<string, string> {
+        return {};
+    }
+
     protected stripProviderPrefix(model: string): string {
         const slashIdx = model.indexOf('/');
         return slashIdx !== -1 ? model.slice(slashIdx + 1) : model;
@@ -153,7 +161,8 @@ export abstract class BaseCloudProviderClient implements ILLMProvider {
                     method: 'GET',
                     timeout: 2500,
                     headers: {
-                        'Authorization': `Bearer ${key.trim()}`
+                        'Authorization': `Bearer ${key.trim()}`,
+                        ...this.getCustomHeaders()
                     }
                 };
 
@@ -229,7 +238,8 @@ export abstract class BaseCloudProviderClient implements ILLMProvider {
                 headers: {
                     'Content-Type': 'application/json',
                     'Content-Length': Buffer.byteLength(payload),
-                    'Authorization': `Bearer ${apiKey}`
+                    'Authorization': `Bearer ${apiKey}`,
+                    ...this.getCustomHeaders()
                 }
             };
 
@@ -312,7 +322,8 @@ export abstract class BaseCloudProviderClient implements ILLMProvider {
                 headers: {
                     'Content-Type': 'application/json',
                     'Content-Length': Buffer.byteLength(payload),
-                    'Authorization': `Bearer ${apiKey}`
+                    'Authorization': `Bearer ${apiKey}`,
+                    ...this.getCustomHeaders()
                 }
             };
 
@@ -425,7 +436,8 @@ export abstract class BaseCloudProviderClient implements ILLMProvider {
                 headers: {
                     'Content-Type': 'application/json',
                     'Content-Length': Buffer.byteLength(payload),
-                    'Authorization': `Bearer ${apiKey}`
+                    'Authorization': `Bearer ${apiKey}`,
+                    ...this.getCustomHeaders()
                 }
             };
 

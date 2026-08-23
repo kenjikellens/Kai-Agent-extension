@@ -139,6 +139,11 @@
           ],
           "default": "auto",
           "description": "Language for Kai Agent UI and response messages."
+        },
+        "kai.openrouterApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for OpenRouter (openrouter.ai/keys)."
         }
       }
     }

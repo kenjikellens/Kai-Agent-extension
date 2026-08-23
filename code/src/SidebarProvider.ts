@@ -766,13 +766,13 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     <!-- Container 1: Minimalist Top Bar -->
                     <div class="sidebar-header">
                         <div class="header-actions">
-                            <button id="new-chat-btn" class="icon-btn-header" title="${translations.newChat}">
+                            <button id="new-chat-btn" class="icon-btn icon-btn--header" title="${translations.newChat}">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                             </button>
-                            <button id="history-btn" class="icon-btn-header" title="${translations.history}">
+                            <button id="history-btn" class="icon-btn icon-btn--header" title="${translations.history}">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                             </button>
-                            <button id="settings-btn" class="icon-btn-header" title="${translations.settings}">
+                            <button id="settings-btn" class="icon-btn icon-btn--header" title="${translations.settings}">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                             </button>
                         </div>
@@ -793,7 +793,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                                     <div class="input-toolbar">
                                          <div class="toolbar-left">
                                             <!-- FILE UPLOAD ATTACHMENT BUTTON -->
-                                            <button type="button" class="toolbar-icon-btn" id="attach-file-btn" title="${translations.uploadFile}">
+                                            <button type="button" class="icon-btn icon-btn--toolbar" id="attach-file-btn" title="${translations.uploadFile}">
                                                 ${svgs.plus || ''}
                                             </button>
 
@@ -821,7 +821,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                                                 Dropdown containing mode options: Agent, Ask, Plan.
                                             -->
                                             <div class="custom-dropdown" id="context-options-dropdown-container">
-                                                <button type="button" class="toolbar-icon-btn" id="at-mention-trigger-btn" title="Modes & Capabilities (@)">
+                                                <button type="button" class="icon-btn icon-btn--toolbar" id="at-mention-trigger-btn" title="Modes & Capabilities (@)">
                                                     ${svgs.at || ''}
                                                 </button>
                                                 <div class="dropdown-menu hidden" id="context-options-menu">
@@ -857,7 +857,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                         <div id="history-container" class="content-view history-container hidden">
                             <div class="history-panel-header">
                                 <span>${translations.previousChats}</span>
-                                <button id="close-history-btn" class="icon-btn-header" title="Close History">✕</button>
+                                <button id="close-history-btn" class="icon-btn icon-btn--header" title="Close History">✕</button>
                             </div>
                             <div id="history-list" class="history-list"></div>
                         </div>
@@ -866,7 +866,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                         <div id="settings-container" class="content-view settings-container hidden">
                             <div class="settings-panel-header">
                                 <span>${translations.settings}</span>
-                                <button id="close-settings-btn" class="icon-btn-header" title="Close Settings">✕</button>
+                                <button id="close-settings-btn" class="icon-btn icon-btn--header" title="Close Settings">✕</button>
                             </div>
                             <div class="settings-content-panel">
                                 <!-- CATEGORY 1: GENERAL SETTINGS -->
@@ -954,7 +954,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                             <div id="keys-container" class="keys-container hidden">
                                 <div class="keys-panel-header">
                                     <span>${translations.externalProviderApiKeys || 'External Provider API Keys'}</span>
-                                    <button id="close-keys-btn" class="icon-btn-header" title="${translations.close || 'Close'}">✕</button>
+                                    <button id="close-keys-btn" class="icon-btn icon-btn--header" title="${translations.close || 'Close'}">✕</button>
                                 </div>
                                 <div class="keys-content-panel">
                                     <!-- Dynamic provider key inputs rendered here -->

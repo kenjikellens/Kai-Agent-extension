@@ -1,174 +1,60 @@
-# KAI Agent - Architectural Overview & System Design
+# KAI Agent - Extension Architectural Overview & System Design
 
-This document provides a comprehensive architectural map, component breakdown, and system design specifications for the **KAI Agent** workspace.
-
----
-
-## 1. Dual Deployment Ecosystem & Architecture
-
-The KAI Agent ecosystem comprises two primary target runtimes sharing the same JavaScript/TypeScript core:
-
-1. **Standalone Desktop Application (Electron EXE)**:
-   - Location: `KAI Agent App/`
-   - Main Process: `src/main/` (`AppHost.ts`, `AgentExecutor.ts`, `LMStudioClient.ts`, etc.)
-   - Renderer UI: `src/renderer/` (`index.html`, `main.css`, `media/js/`)
-   - Local Browser Preview: `run_pc.py` launches a minimal static file server and CORS proxy for rapid web testing.
-2. **VS Code & Antigravity IDE Extension**:
-   - Location: `Kai-Agent-extension/`
-   - Extension Host: `code/src/` (`SidebarProvider.ts`, `AgentExecutor.ts`, `LMStudioClient.ts`, etc.)
-   - Webview UI: `code/media/` (`main.js`, `main.css`, `js/`, `svg/`, `codicons/`)
+This document details the architecture, component roles, and file-by-file specifications for the **KAI Agent VS Code & Antigravity IDE Extension** (`Kai-Agent-extension/`).
 
 ---
 
-## 2. Project File Structure & Core Components Tree
+## 1. Extension Runtime Architecture
 
-```text
-KAI Agent/
-│
-├── .agents/                               # Workspace Customizations & Documentation
-│   ├── AGENTS.md                          # Mandatory workspace rules & architectural guidelines
-│   └── overview.md                        # Master architectural blueprint and file tree
-│
-├── docs/                                  # Shared Reference Documentation
-│   └── model_reference.json               # Model inference parameters, thinking configs & provider metadata
-│
-├── Kai-Agent-extension/                   # VS Code / Antigravity IDE Extension
-│   ├── .agents/
-│   │   └── AGENTS.md                      # Synchronized agent guidelines
-│   ├── docs/
-│   │   ├── model_capabilities.md          # Provider feature matrices
-│   │   └── overview.md                    # Synchronized extension overview
-│   ├── update.bat                         # Fast build & sync script to IDE extension directories
-│   └── code/                              # Extension Source Code
-│       ├── package.json                   # Extension manifest, commands & settings schema
-│       ├── tsconfig.json                  # TypeScript compiler options
-│       ├── prompts/                       # Operational mode system prompts
-│       │   ├── system_prompt_agent.md     # Agent mode prompt (full tool autonomy)
-│       │   ├── system_prompt_ask.md       # Ask mode prompt (read-only consultation)
-│       │   └── system_prompt_planning.md  # Planning mode prompt (structured design artifacts)
-│       ├── src/                           # Extension Host Backend (TypeScript)
-│       │   ├── extension.ts               # Extension activation & command registrations
-│       │   ├── SidebarProvider.ts         # Webview sidebar host, HTML compiler, CSP & IPC bridge
-│       │   ├── AgentExecutor.ts           # Tool dispatch pipeline & agent loop orchestration
-│       │   ├── TurnSnapshotManager.ts     # In-place file snapshot and turn rollback manager
-│       │   ├── I18nManager.ts             # Internationalization & translation dictionary
-│       │   ├── providers/                 # LLM Client Provider Implementations
-│       │   │   ├── ILLMProvider.ts        # Common provider interface contract
-│       │   │   ├── BaseCloudProviderClient.ts # Base cloud provider HTTP abstractions
-│       │   │   ├── LMStudioClient.ts      # Local LM Studio API client & model manager
-│       │   │   ├── GeminiClient.ts        # Google Gemini Cloud API client
-│       │   │   ├── MistralClient.ts       # Mistral AI Cloud API client
-│       │   │   ├── CohereClient.ts        # Cohere Command Cloud API client
-│       │   │   ├── CerebrasClient.ts      # Cerebras Cloud API client
-│       │   │   ├── ZhipuClient.ts         # Zhipu AI (GLM) API client
-│       │   │   └── OmniRouteClient.ts     # OmniRoute local AI gateway client
-│       │   └── tools/                     # Agent Tool Implementations
-│       │       ├── ToolRegistry.ts        # Tool registration and execution dispatcher
-│       │       ├── ReadFileTool.ts        # Workspace file reader
-│       │       ├── WriteFileTool.ts       # File creator / overwrite tool
-│       │       ├── ReplaceFileContentTool.ts # Single-block precise code replacement tool
-│       │       ├── MultiReplaceFileContentTool.ts # Multi-chunk code replacement tool
-│       │       ├── DeleteItemTool.ts      # File / directory deletion tool
-│       │       ├── ListDirTool.ts         # Directory lister & child inspector
-│       │       ├── GrepSearchTool.ts      # Regex & text search across files
-│       │       ├── SymbolSearchTool.ts    # Workspace code symbol search tool
-│       │       ├── DiagnosticsTool.ts     # Linter & language server diagnostics tool
-│       │       ├── RunCommandTool.ts      # Terminal command execution tool
-│       │       ├── WebSearchTool.ts       # Web search MCP client tool
-│       │       ├── FetchUrlTool.ts        # Web page scraper & HTML text fetcher
-│       │       └── UtilityTools.ts        # Math, time, UUID & string utilities
-│       └── media/                         # Webview Frontend Assets
-│           ├── main.js                    # Webview entry script & OOP instantiator
-│           ├── main.css                   # Webview CSS styling tokens & components
-│           ├── vendor/
-│           │   └── mermaid.min.js         # Offline Mermaid diagram rendering bundle
-│           ├── codicons/                  # VS Code Codicon webfont icons
-│           ├── svg/                       # Standalone SVG icon assets
-│           └── js/                        # Modular Frontend OOP Classes
-│               ├── AppState.js            # Active chat session state & history tracker
-│               ├── Constants.js           # Frontend constant tokens & limits
-│               ├── DOMUtils.js            # DOM helpers & SVG icon injectors
-│               ├── MarkdownFormatter.js   # Markdown parser, syntax highlighting & card builder
-│               ├── MermaidRenderer.js     # Mermaid diagram compiler & SVG exporter
-│               ├── WebviewIPCBridge.js    # Bidirectional IPC communication bridge
-│               ├── ChatUIController.js    # Message bubble renderer, stream updates & view manager
-│               ├── PromptSubmissionOrchestrator.js # Turn submission, retries & prompt edits
-│               ├── ModelDropdownController.js # Model selector dropdown & connection status
-│               ├── ModeManager.js         # Operational mode switch controller
-│               ├── HistoryManager.js      # Session history list controller
-│               ├── SettingsController.js  # Settings panels & API key configuration
-│               ├── FileSummaryWidget.js   # Modified files summary chip widget
-│               ├── FileUploadController.js# Context file attachments handler
-│               └── ThinkingStateFormatter.js # Collapsible reasoning thought block parser
-│
-└── KAI Agent App/                         # Standalone Desktop Application (Electron)
-    ├── .agents/
-    │   └── AGENTS.md                      # Synchronized desktop app guidelines
-    ├── docs/
-    │   ├── model_capabilities.md          # Provider feature matrices
-    │   └── overview.md                    # Synchronized desktop app overview
-    ├── run_pc.py                          # Python local preview server & CORS proxy
-    ├── package.json                       # Electron app manifest, dependencies & build targets
-    ├── tsconfig.json                      # TypeScript build configuration
-    ├── prompts/                           # Operational mode prompts (identical to extension)
-    │   ├── system_prompt_agent.md
-    │   ├── system_prompt_ask.md
-    │   ├── system_prompt_chat.md
-    │   ├── system_prompt_chat_workspace.md
-    │   └── system_prompt_planning.md
-    ├── src/
-    │   ├── main/                          # Electron Main Process (TypeScript)
-    │   │   ├── index.ts                   # Electron app bootstrap & window lifecycle
-    │   │   ├── preload.ts                 # Secure contextBridge IPC exposure
-    │   │   ├── AppHost.ts                 # Desktop host service & IPC event broker
-    │   │   ├── AgentExecutor.ts           # Tool dispatch & execution pipeline
-    │   │   ├── TurnSnapshotManager.ts     # In-place file snapshot & rollback manager
-    │   │   ├── I18nManager.ts             # Localization dictionaries
-    │   │   ├── providers/                 # LLM provider clients (ILLMProvider, LMStudioClient, etc.)
-    │   │   └── tools/                     # Tool implementations (100% parity with extension)
-    │   └── renderer/                      # Electron Renderer UI (HTML, CSS, JS)
-    │       ├── index.html                 # App layout shell, collapsible sidebar & views
-    │       └── media/                     # Static media, CSS, vendor bundles & frontend modules
-    │           ├── main.js                # Desktop frontend orchestrator
-    │           ├── main.css               # Desktop layout stylesheet & component styling
-    │           ├── vendor/
-    │           │   └── mermaid.min.js     # Standalone offline Mermaid bundle
-    │           └── js/                    # Modular OOP classes (100% parity with extension)
+The Extension is hosted inside VS Code / Antigravity IDE and operates across two isolated process boundaries:
+
+```mermaid
+graph TD
+    subgraph IDE_Extension_Host["Extension Host Process (Node.js / TypeScript)"]
+        ext["src/extension.ts"] --> sidebar["src/SidebarProvider.ts"]
+        sidebar --> executor["src/AgentExecutor.ts"]
+        executor --> providers["src/providers/* (Gemini, OpenRouter, Mistral, etc.)"]
+        executor --> tools["src/tools/* (ReadFile, WriteFile, Grep, Terminal, etc.)"]
+        executor --> snapshot["src/TurnSnapshotManager.ts"]
+    end
+
+    subgraph Webview_Renderer["Webview Panel (HTML / CSS / Vanilla JS)"]
+        mainJS["media/main.js"]
+        bridge["media/js/WebviewIPCBridge.js (~150 lines)"]
+        uiCtrl["media/js/ChatUIController.js"]
+        modelDrop["media/js/ModelDropdownController.js"]
+        thinkFmt["media/js/ThinkingStateFormatter.js"]
+    end
+
+    bridge <-->|"vscode.postMessage() / window.onmessage"| sidebar
 ```
 
 ---
 
-## 3. Core Subsystems & Technical Mandates
+## 2. Dedicated Extension File Roles & Differences vs. Desktop App
 
-### A. Turn File Snapshots & In-Place Rollback
-- Implemented via `TurnSnapshotManager.ts`.
-- Automatically captures pre-mutation file snapshots prior to executing mutating tools (`write_file`, `replace_file_content`, `multi_replace_file_content`, `delete_item`).
-- When a user retries a turn or edits a previous prompt:
-  1. The UI truncates message rows back to the edited turn.
-  2. `TurnSnapshotManager.rollbackTurn(turnId)` restores modified/deleted files and deletes created files in reverse chronological order.
-  3. The prompt re-executes cleanly on top of the restored baseline.
+| Extension File Path | Primary Role in Extension | Differences & Architectural Boundary vs. Desktop App |
+| :--- | :--- | :--- |
+| **`code/media/js/WebviewIPCBridge.js`** | **Lean Extension IPC Bridge (~150 lines)**. Forwards UI actions directly to the Extension Host via `this.vscode.postMessage(message)` and dispatches incoming host events. | **NO Fallback Engine**: Does **NOT** contain client-side API fetch loops, SSE stream readers, or browser tool implementations. Unlike the Desktop App (which has ~1400 lines of `_handleClientSideIPC` for standalone browser testing), the Extension delegates 100% of LLM streaming and tool executions to the Extension Host in TypeScript. |
+| **`code/media/main.js`** | **Extension Webview UI Controller**. Initializes the single-column webview interface, binds header buttons, and manages panel tabs. | **NO Sidebar Management**: The Extension has **NO Left Sidebar** (no permanent chat history panel or desktop window controls). Navigation is handled exclusively via the compact top Header and Input Card dock. |
+| **`code/media/main.css`** | **Extension Webview Stylesheet**. Uses native VS Code CSS variables (`var(--vscode-editor-background)`, `var(--vscode-font-family)`, etc.) for theme integration. | **Scoped Container Styles**: Contains styles tailored for VS Code's narrow sidebar / webview panel layout. Does not contain desktop titlebar drag regions or desktop multi-column grid layouts. |
+| **`code/src/SidebarProvider.ts`** | **Extension Webview Host & CSP Provider**. Creates the `vscode.WebviewView`, injects CSP nonces, loads HTML/JS assets, and routes IPC messages between Webview and backend. | **VS Code Specific**: Exists only in the Extension. Replaces Desktop's `AppHost.ts` and `preload.ts`. |
+| **`code/src/AgentExecutor.ts`** | **Backend Tool Dispatch & Agent Loop Engine**. Handles iterative agent steps, executes mutating tools with snapshot backups, and streams tokens back to webview. | Operates directly on the local workspace via Node.js `fs` and VS Code Workspace APIs (`vscode.workspace`). |
+| **`code/src/providers/*`** | **Dedicated LLM Provider Classes**. Dedicated TypeScript clients (`GeminiClient`, `OpenRouterClient`, `LMStudioClient`, `MistralClient`, `CohereClient`, `CerebrasClient`, `ZhipuClient`, `OmniRouteClient`). | Shares 100% OOP interface parity with Desktop App backend, executing securely in Node.js. |
+| **`code/media/js/ThinkingStateFormatter.js`** | **Dynamic Thinking & Reasoning Resolver**. Resolves per-model reasoning options (e.g. `stealth/ox-alpha`, `z-ai/glm-5.2`, `inkling`) and formats Gemini `Minimal` labels. | 100% shared across Extension and Desktop App renderer for consistent model capability rendering. |
+| **`code/media/js/ModelDropdownController.js`** | **Model Selector Dropdown Manager**. Manages dropdown accordion, live LM Studio status dots, and cloud provider API key indicators. | Optimized for compact Extension webview dropdown menus without sidebar dependencies. |
 
-### B. LM Studio Model Management & Single-Model Rule
-- **Max 1 Loaded Model Enforcement**:
-  - Prior to dispatching completions to a local model, `LMStudioClient.ensureSingleLoadedModel(model)` checks loaded models (`lms ps`).
-  - If a different model is loaded, it unloads previous models (`lms unload --all`) before loading the target model.
-  - If the requested model is already in memory, it is preserved without reload latency.
-- **Dynamic Reasoning Parameters**:
-  - Model-specific reasoning configurations (`thinking`, `enable_thinking`, `chat_template_kwargs`, `reasoning_effort`) are passed as per-request inference parameters.
+---
 
-### C. Agent Tool Parity Contract
-Both runtimes maintain 100% contract parity across all registered tools:
-`read_file`, `write_file`, `replace_file_content`, `multi_replace_file_content`, `delete_item`, `list_dir`, `grep_search`, `symbol_search`, `get_diagnostics`, `run_command`, `web_search`, `fetch_url`, `utility_tools`.
+## 3. Extension-Specific UI & UX Principles
 
-### D. Mermaid Diagram Rendering Engine
-- **Offline Library Integration**: `mermaid.min.js` bundled locally in `media/vendor/` ensuring complete offline capability and strict CSP compliance.
-- **Markdown Fenced Code Block Detection**: `MarkdownFormatter.js` formats closed ` ```mermaid ` code blocks into `.mermaid-diagram-card` elements.
-- **Asynchronous Rendering Pipeline**: `MermaidRenderer.js` renders SVGs asynchronously via `mermaid.render()`. Errors are caught gracefully, displaying a syntax error notice while preserving chat stability.
-- **Interactive Diagram Controls**: Provides Diagram / Code tab switching, Copy Mermaid Code, Copy SVG markup, and Download SVG.
-- **Theme Adaptation**: Auto-detects light and dark themes (`vscode-light`, dark tokens) and initializes Mermaid styling variables accordingly.
-
-### E. Triple-File Documentation Synchronization Mandate
-Whenever architecture, UI components, runtime features, or system design guidelines are modified, all 3 `AGENTS.md` and all 3 `overview.md` files must be updated simultaneously in lockstep:
-1. Root workspace: `.agents/AGENTS.md` and `.agents/overview.md`
-2. Desktop App: `KAI Agent App/.agents/AGENTS.md` and `KAI Agent App/docs/overview.md`
-3. Extension: `Kai-Agent-extension/.agents/AGENTS.md` and `Kai-Agent-extension/docs/overview.md`
+1. **Header & Dock Layout (No Sidebar)**:
+   - The Extension is hosted in a compact VS Code sidebar / editor tab.
+   - It does **not** have a permanent left sidebar.
+   - Mode switching (`agent`, `ask`, `planning`, `chat`), new chat creation, history, and settings are accessed from the top Header and Input dock.
+2. **Native VS Code Integration**:
+   - Icons use official VS Code Codicons (`codicons/codicon.css`) alongside custom standalone SVGs in `media/svg/`.
+   - Theme styling automatically inherits VS Code's active color theme.
+3. **Strict Build & Sync Workflow**:
+   - Compile TypeScript: `npm run compile` in `Kai-Agent-extension/code`.
+   - Sync Extension: Execute `update.bat` to copy compiled assets into VS Code and Antigravity IDE extension directories.

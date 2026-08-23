@@ -144,20 +144,9 @@ class WebviewIPCBridge {
                     if (capRes.ok) {
                         lmStudioCapabilities = await capRes.json();
                     }
-                } catch (e) {}
+                } catch (e) { }
 
-                if ((!lmModels || lmModels.length === 0) && lmStudioCapabilities && Object.keys(lmStudioCapabilities).length > 0) {
-                    const seen = new Set();
-                    lmModels = [];
-                    for (const cap of Object.values(lmStudioCapabilities)) {
-                        const id = cap.displayName || cap.modelId;
-                        if (id && !seen.has(id.toLowerCase())) {
-                            seen.add(id.toLowerCase());
-                            lmModels.push(id);
-                        }
-                    }
-                    lmConnected = lmModels.length > 0;
-                }
+
 
                 const freeProvidersConfig = buildFreeProviders();
                 const isGeminiConnected = !!apiKey.trim();
@@ -214,7 +203,7 @@ class WebviewIPCBridge {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ model: message.model, unloadPrevious: true })
                     });
-                } catch (e) {}
+                } catch (e) { }
                 await this._handleClientSideIPC({ type: 'checkConnection' });
                 break;
             }
@@ -247,7 +236,7 @@ class WebviewIPCBridge {
                             chats: saved.map(c => ({ id: c.id, title: c.title || 'New Chat', timestamp: c.timestamp || Date.now() }))
                         });
                     }
-                } catch (e) {}
+                } catch (e) { }
                 break;
             }
             case 'loadChatHistory': {
@@ -267,7 +256,7 @@ class WebviewIPCBridge {
                     const saved = JSON.parse(localStorage.getItem('kai.savedChats') || '[]');
                     const found = saved.find(c => c.id === message.chatId);
                     if (found) emit({ type: 'loadChat', chat: found });
-                } catch (e) {}
+                } catch (e) { }
                 break;
             }
             case 'deleteChat': {
@@ -279,7 +268,7 @@ class WebviewIPCBridge {
                         type: 'chatHistory',
                         chats: saved.map(c => ({ id: c.id, title: c.title || 'New Chat', timestamp: c.timestamp || Date.now() }))
                     });
-                } catch (e) {}
+                } catch (e) { }
                 break;
             }
             case 'abort': {
@@ -321,7 +310,7 @@ class WebviewIPCBridge {
                     if (promptRes.ok) {
                         systemPrompt = await promptRes.text();
                     }
-                } catch (e) {}
+                } catch (e) { }
 
                 // Load workspace directory structure and append to system prompt
                 if (hasWs) {
@@ -338,7 +327,7 @@ class WebviewIPCBridge {
                                 workspaceInfo += `${wsData.result}\n`;
                             }
                         }
-                    } catch (e) {}
+                    } catch (e) { }
                     systemPrompt += workspaceInfo;
                 }
 
@@ -365,15 +354,13 @@ class WebviewIPCBridge {
                     const modelLower = (model || '').toLowerCase();
                     const isGemini = modelLower.startsWith('gemini');
                     const isMistral = modelLower.startsWith('mistral/');
+                    const isOpenRouter = modelLower.startsWith('openrouter/');
                     const isZhipu = modelLower.startsWith('zhipu/');
                     const isCohere = modelLower.startsWith('cohere/');
                     const isCerebras = modelLower.startsWith('cerebras/');
                     const isOmniRoute = modelLower.startsWith('omniroute/');
 
-                    const effortVal = message.geminiThinkingLevel || 'high';
-                    const caps = (typeof ThinkingStateFormatter !== 'undefined' && ThinkingStateFormatter._capabilities)
-                        ? (ThinkingStateFormatter._capabilities[model] || ThinkingStateFormatter._capabilities[modelLower])
-                        : null;
+
 
                     // Agentic loop: stream response, parse tool calls, execute, repeat
                     const maxIterations = 15;
@@ -446,6 +433,7 @@ class WebviewIPCBridge {
                                     includeThoughts: isThinkingOn
                                 };
                             }
+                            console.log('[KAI IPC] Gemini thinkingConfig:', model, '→', thinkingConfig);
 
                             payload = {
                                 contents: contents,
@@ -455,6 +443,49 @@ class WebviewIPCBridge {
                                     thinkingConfig: thinkingConfig
                                 }
                             };
+                        } else if (isOpenRouter) {
+                            const openrouterKey = (localStorage.getItem('kai.openrouterApiKey') || '').trim();
+                            if (!openrouterKey) {
+                                if (window.chatUIController && typeof window.chatUIController.showApiKeyRequiredNotice === 'function') {
+                                    window.chatUIController.showApiKeyRequiredNotice({
+                                        providerName: 'OpenRouter',
+                                        modelName: model,
+                                        configKey: 'openrouterApiKey',
+                                        url: 'https://openrouter.ai/keys',
+                                        keyHint: 'Get API key at openrouter.ai/keys'
+                                    });
+                                }
+                                emit({
+                                    type: 'error',
+                                    error: 'OpenRouter API-sleutel is niet ingesteld! Voer je OpenRouter API key in via Instellingen.'
+                                });
+                                emit({ type: 'streamEnd' });
+                                return;
+                            }
+                            targetUrl = 'https://openrouter.ai/api/v1/chat/completions';
+                            fetchHeaders['Authorization'] = `Bearer ${openrouterKey}`;
+                            fetchHeaders['HTTP-Referer'] = 'https://kai-agent.local';
+                            fetchHeaders['X-Title'] = 'KAI Agent';
+
+                            const bareModel = model.replace(/^openrouter\//i, '');
+                            const caps = (typeof ThinkingStateFormatter !== 'undefined') ? ThinkingStateFormatter.getCapabilitiesState(model) : null;
+                            const isReasoningCapable = caps ? (caps.hasThinkingToggle || caps.hasReasoningEffort) : false;
+
+                            payload = {
+                                model: bareModel,
+                                messages: messagesToSend.map(m => ({ role: m.role, content: m.content })),
+                                stream: true
+                            };
+
+                            if (isReasoningCapable) {
+                                const isOn = caps.isThinkingOn;
+                                const effort = caps.hasReasoningEffort ? caps.reasoningLevel : (isOn ? 'high' : 'none');
+                                payload.reasoning = {
+                                    effort: isOn ? effort : 'none',
+                                    exclude: !isOn
+                                };
+                            }
+                            console.log('[KAI IPC] OpenRouter reasoning payload:', model, '→', payload.reasoning);
                         } else if (isMistral) {
                             const mistralKey = (localStorage.getItem('kai.mistralApiKey') || '').trim();
                             if (!mistralKey) {
@@ -617,7 +648,7 @@ class WebviewIPCBridge {
                             });
                         } catch (fetchErr) {
                             console.warn(`[KAI IPC] Direct fetch to ${targetUrl} failed (${fetchErr.message}). Trying proxy...`);
-                            const isCloudProvider = isGemini || isMistral || isZhipu || isCohere || isCerebras || isOmniRoute;
+                            const isCloudProvider = isGemini || isMistral || isOpenRouter || isZhipu || isCohere || isCerebras || isOmniRoute;
                             if (!isCloudProvider) {
                                 // Fallback to same-origin Python proxy if browser blocked direct LM Studio fetch due to CORS or port access
                                 response = await fetch('/api/lmstudio/chat', {
@@ -634,7 +665,7 @@ class WebviewIPCBridge {
 
                         if (!response.ok) {
                             const errBody = await response.text().catch(() => '');
-                            const providerName = isGemini ? 'Google Gemini' : (isMistral ? 'Mistral AI' : 'LM Studio');
+                            const providerName = isGemini ? 'Google Gemini' : (isMistral ? 'Mistral AI' : (isOpenRouter ? 'OpenRouter' : 'LM Studio'));
                             console.error(`[KAI IPC] ${providerName} returned HTTP ${response.status}:`, errBody);
                             throw new Error(`${providerName} error (${response.status}): ${errBody || response.statusText}`);
                         }
@@ -739,7 +770,7 @@ class WebviewIPCBridge {
                                                 }
                                             }
                                         }
-                                    } catch (e) {}
+                                    } catch (e) { }
                                 }
                             }
                         }
@@ -871,9 +902,9 @@ class WebviewIPCBridge {
                                     const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
                                     let rawTitle = lines.length > 0 ? lines[lines.length - 1] : raw;
                                     rawTitle = rawTitle.replace(/^(title|topic)\s*:\s*/i, '')
-                                                       .replace(/["'`*_#]/g, ' ')
-                                                       .replace(/\s+/g, ' ')
-                                                       .trim();
+                                        .replace(/["'`*_#]/g, ' ')
+                                        .replace(/\s+/g, ' ')
+                                        .trim();
                                     if (rawTitle && rawTitle.length > 0 && rawTitle.length < 60) {
                                         const savedChats = JSON.parse(localStorage.getItem('kai.savedChats') || '[]');
                                         const foundChat = (targetChatId ? savedChats.find(c => c.id === targetChatId) : null) || savedChats[0];
@@ -892,7 +923,7 @@ class WebviewIPCBridge {
                                         }
                                     }
                                 }
-                            } catch (e) {}
+                            } catch (e) { }
                         })();
                     }
                 } catch (err) {
@@ -925,7 +956,7 @@ class WebviewIPCBridge {
                     try {
                         const content = await file.text();
                         files.push({ fileName: file.name, filePath: file.name, relativePath: file.name, content });
-                    } catch (error) {}
+                    } catch (error) { }
                 }
                 if (files.length > 0) this._emitClientSide({ type: 'filesSelected', files });
                 resolve();
@@ -1119,7 +1150,7 @@ class WebviewIPCBridge {
 
                 return { name: effectiveTool, args, query };
             }
-        } catch (e) {}
+        } catch (e) { }
         return null;
     }
 

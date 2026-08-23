@@ -212,52 +212,84 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.icon-btn-header,
-.icon-btn,
-.history-item-delete-btn {
+/**
+ * Single Unified Component: .icon-btn
+ * Standardized icon-only clickable button across the entire UI.
+ * 
+ * Applied in:
+ * - Header action buttons (.icon-btn, .icon-btn--header)
+ * - Input prompt toolbar (.icon-btn, .icon-btn--toolbar)
+ * - Sidebar history item deletion (.icon-btn, .icon-btn--delete)
+ */
+.icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: transparent;
-  color: currentColor;
-}
-
-/* Header action icon button */
-.icon-btn-header {
-  padding: 5px;
-  width: 26px;
-  height: 26px;
-  border-radius: var(--app-radius-md);
   color: var(--app-muted);
+  border: 0 !important;
+  outline: none;
+  cursor: pointer;
   box-sizing: border-box;
-  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.icon-btn-header svg {
-  width: 15px;
-  height: 15px;
   flex-shrink: 0;
+  padding: 4px;
+  border-radius: var(--app-radius-sm);
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
-/* Header action icon button hover state with spread inset effect */
-.icon-btn-header:hover {
+.icon-btn:hover:not(:disabled) {
   color: var(--app-fg);
   background: var(--app-surface-hover);
   box-shadow: var(--app-btn-inset);
 }
 
-/* Generic icon button container */
-.icon-btn {
-  padding: 2px 6px;
-  font-size: 0.75rem;
-  border-radius: 3px;
-  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+.icon-btn:active:not(:disabled) {
+  background: var(--app-surface-active);
 }
 
-/* Generic icon button hover state with spread inset effect */
-.icon-btn:hover {
-  background: var(--app-surface-hover);
-  box-shadow: var(--app-btn-inset);
+/* Modifiers on .icon-btn */
+.icon-btn--header {
+  padding: 5px;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--app-radius-md);
+}
+
+.icon-btn--header svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.icon-btn--toolbar {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 999px;
+  background: var(--app-surface-strong);
+}
+
+.icon-btn--toolbar.active-mode {
+  color: var(--vscode-button-foreground, #ffffff);
+  background: var(--app-accent);
+}
+
+.icon-btn--delete {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  opacity: 0;
+  flex: 0 0 auto;
+  margin-left: 4px;
+}
+
+.history-item:hover .icon-btn--delete {
+  opacity: 1;
+}
+
+.icon-btn--delete:hover {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.15);
 }
 
 #send-btn {
@@ -965,35 +997,6 @@ button:disabled {
   opacity: 0.9;
 }
 
-/* Compact icon buttons for file upload (+) and capabilities (@) - Full circle pill */
-.toolbar-icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: 0 !important;
-  border-radius: 999px;
-  background: var(--app-surface-strong);
-  color: var(--app-muted);
-  cursor: pointer;
-  box-sizing: border-box;
-  flex-shrink: 0;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.toolbar-icon-btn:hover {
-  background: var(--app-surface-hover);
-  color: var(--app-fg);
-}
-
-/* Active indicator highlight when Planning Mode is enabled */
-.toolbar-icon-btn.active-mode {
-  color: var(--vscode-button-foreground, #ffffff);
-  background: var(--app-accent);
-}
-
 /* Context & capabilities popup menu (@ button menu) */
 #context-options-menu {
   position: absolute;
@@ -1228,6 +1231,18 @@ button:disabled {
   flex-shrink: 0;
 }
 
+/* Shared Base Container for all Dropdown & Flyout Menus (Single Source of Truth) */
+.dropdown-menu,
+.thinking-flyout-menu-inner {
+  background: var(--app-dropdown-bg);
+  border-radius: 12px;
+  padding: 2.5px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
 /* Options menu container for the Model Selector Dropdown */
 .dropdown-menu {
   position: absolute;
@@ -1240,11 +1255,7 @@ button:disabled {
   max-height: 480px;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0;
-  box-sizing: border-box;
-  background: var(--app-dropdown-bg);
   border: 1px solid var(--app-border-strong);
-  border-radius: 12px;
   box-shadow: var(--app-dropdown-shadow);
 }
 
@@ -1526,16 +1537,10 @@ button:disabled {
   flex-direction: column;
 }
 
-/* Inner visible box of the Thinking & Reasoning flyout - Borderless container with 0 padding flush edges */
+/* Inner visible box of the Thinking & Reasoning flyout - Modifier on shared dropdown base */
 .thinking-flyout-menu-inner {
-  background: var(--app-dropdown-bg);
   border: none !important;
-  border-radius: 12px;
   box-shadow: var(--app-flyout-shadow);
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
   overflow: hidden;
 }
 
@@ -2514,25 +2519,6 @@ button:disabled {
   font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
   margin-left: 4px;
-}
-
-.history-item-delete-btn {
-  flex: 0 0 auto;
-  margin-left: 4px;
-  padding: 4px;
-  border-radius: var(--app-radius-sm);
-  color: var(--app-muted);
-  opacity: 0.6;
-  transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
-}
-
-.history-item:hover .history-item-delete-btn {
-  opacity: 1;
-}
-
-.history-item-delete-btn:hover {
-  background: rgba(231, 76, 60, 0.15);
-  color: #e74c3c;
 }
 
 .settings-content-panel {

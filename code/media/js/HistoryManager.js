@@ -103,7 +103,7 @@ class HistoryManager {
             content.appendChild(time);
             
             const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'history-item-delete-btn';
+            deleteBtn.className = 'icon-btn icon-btn--delete history-item-delete-btn';
             deleteBtn.title = 'Delete Chat';
             deleteBtn.innerHTML = window.KAI_SVGS['delete'] || '✕';
             
@@ -131,7 +131,7 @@ class HistoryManager {
             });
             
             item.addEventListener('click', (e) => {
-                if (e.target && e.target.closest && e.target.closest('.history-item-delete-btn')) {
+                if (e.target && e.target.closest && (e.target.closest('.icon-btn--delete') || e.target.closest('.history-item-delete-btn'))) {
                     return;
                 }
                 if (isWaitingForResponse) {
@@ -142,7 +142,7 @@ class HistoryManager {
                     this.onViewSwitch('chat');
                 }
             });
-            
+
             item.appendChild(content);
             item.appendChild(deleteBtn);
             this.historyList.appendChild(item);
