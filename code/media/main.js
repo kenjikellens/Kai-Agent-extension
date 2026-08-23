@@ -219,7 +219,9 @@
         ipcBridge.on('connectionStatus', (message) => {
             if (message.translations) {
                 window.KAI_I18N = message.translations;
-                if (messageInput && message.translations.messagePlaceholder) {
+                if (modeManager && typeof modeManager.updatePlaceholder === 'function') {
+                    modeManager.updatePlaceholder(message.translations);
+                } else if (messageInput && message.translations.messagePlaceholder) {
                     messageInput.placeholder = message.translations.messagePlaceholder;
                 }
                 const thinkingLabel = document.getElementById('thinking-toggle-label');

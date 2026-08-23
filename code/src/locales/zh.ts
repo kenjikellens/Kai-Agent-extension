@@ -57,5 +57,10 @@ export const zh: Translations = {
     "keepThinkingGeneratingDesc": "Keeps the reasoning block open while the response is streaming",
     "keepThinkingFinishedDesc": "Leaves the reasoning card expanded after generation completes",
     apiKeysSettingsDesc: "管理 API 密钥并测试云模型的实时连接",
-    testConnection: "测试连接"
+    testConnection: "测试连接",
+    "noWorkspaceSelected": "未选择工作区",
+    "placeholderChat": "向 Kai 询问任何问题、计算、转换或搜索网络...",
+    "placeholderAsk": "询问有关工作区代码库的问题...",
+    "placeholderAgent": "让 Kai 编辑代码、执行任务或运行命令...",
+    "placeholderPlanning": "描述项目任务以生成实施计划..."
 };

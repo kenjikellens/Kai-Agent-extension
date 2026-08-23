@@ -57,5 +57,10 @@ export const nl: Translations = {
     "keepThinkingGeneratingDesc": "Houdt het denkblok geopend zolang het model aan het redeneren is",
     "keepThinkingFinishedDesc": "Laat het denkproces geopend na voltooien in plaats van automatisch in te klappen",
     apiKeysSettingsDesc: "Beheer API-sleutels en test live de verbinding voor cloudmodellen",
-    testConnection: "Verbinding testen"
+    testConnection: "Verbinding testen",
+    "noWorkspaceSelected": "Geen werkruimte geselecteerd",
+    "placeholderChat": "Vraag Kai alles, bereken, converteer of zoek op het web...",
+    "placeholderAsk": "Stel vragen over de codebase van je werkruimte...",
+    "placeholderAgent": "Vraag Kai om code te bewerken, taken uit te voeren of commando's te draaien...",
+    "placeholderPlanning": "Beschrijf een projecttaak om een implementatieplan te genereren..."
 };

@@ -57,5 +57,10 @@ export const hi: Translations = {
     "keepThinkingGeneratingDesc": "Keeps the reasoning block open while the response is streaming",
     "keepThinkingFinishedDesc": "Leaves the reasoning card expanded after generation completes",
     apiKeysSettingsDesc: "API कुंजियों को प्रबंधित करें और क्लाउड मॉडल के लिए लाइव कनेक्शन का परीक्षण करें",
-    testConnection: "कनेक्शन का परीक्षण करें"
+    testConnection: "कनेक्शन का परीक्षण करें",
+    "noWorkspaceSelected": "कोई कार्यक्षेत्र चयनित नहीं है",
+    "placeholderChat": "Kai से कुछ भी पूछें, गणना करें, रूपांतरित करें या वेब पर खोजें...",
+    "placeholderAsk": "अपने कार्यक्षेत्र कोडबेस के बारे में प्रश्न पूछें...",
+    "placeholderAgent": "कोड संपादित करने, कार्य निष्पादित करने या कमांड चलाने के लिए कहें...",
+    "placeholderPlanning": "कार्यान्वयन योजना बनाने के लिए प्रोजेक्ट कार्य का विवरण दें..."
 };

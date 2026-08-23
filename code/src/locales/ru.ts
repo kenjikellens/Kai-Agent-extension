@@ -57,5 +57,10 @@ export const ru: Translations = {
     "keepThinkingGeneratingDesc": "Keeps the reasoning block open while the response is streaming",
     "keepThinkingFinishedDesc": "Leaves the reasoning card expanded after generation completes",
     apiKeysSettingsDesc: "Управляйте ключами API и проверяйте подключение к облачным моделям",
-    testConnection: "Проверить соединение"
+    testConnection: "Проверить соединение",
+    "noWorkspaceSelected": "Рабочая область не выбрана",
+    "placeholderChat": "Спросите Kai о чем угодно, считайте, конвертируйте или ищите в интернете...",
+    "placeholderAsk": "Задавайте вопросы о кодовой базе вашей рабочей области...",
+    "placeholderAgent": "Попросите Kai редактировать код, выполнять задачи или запускать команды...",
+    "placeholderPlanning": "Опишите задачу проекта для создания плана реализации..."
 };

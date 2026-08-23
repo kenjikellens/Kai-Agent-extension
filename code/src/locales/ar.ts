@@ -57,5 +57,10 @@ export const ar: Translations = {
     "keepThinkingGeneratingDesc": "Keeps the reasoning block open while the response is streaming",
     "keepThinkingFinishedDesc": "Leaves the reasoning card expanded after generation completes",
     apiKeysSettingsDesc: "إدارة مفاتيح API واختبار الاتصال المباشر بنماذج السحابة",
-    testConnection: "اختبار الاتصال"
+    testConnection: "اختبار الاتصال",
+    "noWorkspaceSelected": "لم يتم تحديد مساحة عمل",
+    "placeholderChat": "اسأل Kai أي شيء، أو قم بالحساب، أو التحويل، أو ابحث في الويب...",
+    "placeholderAsk": "اطرح أسئلة حول قاعدة التعليمات البرمجية لمساحة العمل...",
+    "placeholderAgent": "اطلب من Kai تعديل التعليمات البرمجية، أو تنفيذ المهام، أو تشغيل الأوامر...",
+    "placeholderPlanning": "صف مهمة المشروع لإنشاء خطة تنفيذ..."
 };

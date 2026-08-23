@@ -76,6 +76,11 @@ export interface Translations {
     keepThinkingFinishedDesc?: string;
     apiKeysSettingsDesc?: string;
     testConnection?: string;
+    noWorkspaceSelected?: string;
+    placeholderChat?: string;
+    placeholderAsk?: string;
+    placeholderAgent?: string;
+    placeholderPlanning?: string;
 }
 
 /**

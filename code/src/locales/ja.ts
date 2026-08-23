@@ -57,5 +57,10 @@ export const ja: Translations = {
     "keepThinkingGeneratingDesc": "Keeps the reasoning block open while the response is streaming",
     "keepThinkingFinishedDesc": "Leaves the reasoning card expanded after generation completes",
     apiKeysSettingsDesc: "APIキーを管理し、クラウドモデルのライブ接続をテストします",
-    testConnection: "接続をテスト"
+    testConnection: "接続をテスト",
+    "noWorkspaceSelected": "ワークスペースが選択されていません",
+    "placeholderChat": "Kaiに何でも質問、計算、変換、またはウェブ検索...",
+    "placeholderAsk": "ワークスペースのコードベースについて質問する...",
+    "placeholderAgent": "Kaiにコードの編集、タスクの実行、コマンドの実行を依頼する...",
+    "placeholderPlanning": "実装計画を生成するためのタスクを記述してください..."
 };

@@ -57,5 +57,10 @@ export const ko: Translations = {
     "keepThinkingGeneratingDesc": "Keeps the reasoning block open while the response is streaming",
     "keepThinkingFinishedDesc": "Leaves the reasoning card expanded after generation completes",
     apiKeysSettingsDesc: "API 키를 관리하고 클라우드 모델의 실시간 연결을 테스트합니다",
-    testConnection: "연결 테스트"
+    testConnection: "연결 테스트",
+    "noWorkspaceSelected": "선택된 워크스페이스 없음",
+    "placeholderChat": "Kai에게 무엇이든 질문, 계산, 변환 또는 웹 검색...",
+    "placeholderAsk": "워크스페이스 코드베이스에 대해 질문하세요...",
+    "placeholderAgent": "Kai에게 코드 수정, 작업 실행 또는 명령 실행 요청...",
+    "placeholderPlanning": "구현 계획을 생성할 프로젝트 작업을 설명하세요..."
 };

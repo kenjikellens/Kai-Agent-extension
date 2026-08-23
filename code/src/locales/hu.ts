@@ -57,5 +57,10 @@ export const hu: Translations = {
     "keepThinkingGeneratingDesc": "Keeps the reasoning block open while the response is streaming",
     "keepThinkingFinishedDesc": "Leaves the reasoning card expanded after generation completes",
     apiKeysSettingsDesc: "Manage API keys and test live connections for cloud models",
-    testConnection: "Test connection"
+    testConnection: "Test connection",
+    "noWorkspaceSelected": "Nincs munkaterület kiválasztva",
+    "placeholderChat": "Kérdezzen bármit a Kai-tól, számoljon, váltson át vagy keressen a weben...",
+    "placeholderAsk": "Tegyen fel kérdéseket a munkaterület kódbázisáról...",
+    "placeholderAgent": "Kérje meg a Kai-t kód szerkesztésére, feladatok végrehajtására vagy parancsok futtatására...",
+    "placeholderPlanning": "Írjon le egy projektfeladatot a megvalósítási terv generálásához..."
 };

@@ -1174,23 +1174,24 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  height: 26px;
-  padding: 0 10px;
-  border-radius: var(--app-radius-md, 6px);
-  background: var(--app-surface-strong, #252526);
-  border: 1px solid var(--app-border, #3c3c3c);
-  color: var(--app-muted, #999999);
-  font-size: 0.72rem;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--app-surface-strong);
+  border: 0 !important;
+  outline: none;
+  color: var(--app-muted);
+  font-size: 0.76rem;
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .welcome-link-btn:hover {
-  background: var(--app-surface-hover, #2d2d2d);
-  color: var(--app-fg, #ffffff);
-  border-color: var(--app-border-strong, #555555);
+  background: var(--app-surface-hover);
+  color: var(--app-fg);
+  box-shadow: var(--app-btn-inset);
 }
 
 /* ==========================================================================
@@ -1664,25 +1665,33 @@ button:disabled {
   width: 100%;
   padding: 2px 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-/* Settings & Help category wrapper - Smooth 250ms morph with slightly lighter card background and borderless container */
 .settings-category {
   position: relative;
   margin: 0;
   padding: 0;
   border: none !important;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
+  background: transparent;
   box-sizing: border-box;
   width: 100%;
   overflow: visible;
-  transition: border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s ease;
+}
+
+/* When category is expanded, the wrapper gets the card background */
+.settings-category:not(.collapsed) {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 /* Fully rounded pill-shaped container when category is collapsed */
 .settings-category.collapsed {
   border-radius: 22px;
+  background: transparent;
 }
 
 /* Action button inside settings input row with smooth transition */
@@ -1738,6 +1747,7 @@ button:disabled {
 .settings-category .category-header-btn {
   padding: 8px 12px;
   border-radius: 12px;
+  background: var(--app-surface-strong);
   transition: border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -1753,14 +1763,15 @@ button:disabled {
 
 .settings-category .category-header-btn:hover,
 .settings-category .category-header-btn:focus-visible {
-  background: var(--app-surface-hover, rgba(255, 255, 255, 0.07)) !important;
+  background: var(--app-surface-hover) !important;
   color: var(--app-fg, #ffffff);
   border: none !important;
   box-shadow: var(--app-btn-inset);
 }
 
 .settings-category .category-header-btn:active {
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: var(--app-surface-active) !important;
+  color: var(--app-fg, #ffffff);
   box-shadow: none !important;
 }
 
@@ -3039,23 +3050,34 @@ details[open]>summary>.custom-chevron {
 }
 
 .help-close-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   width: 24px;
   height: 24px;
+  min-width: 24px;
+  min-height: 24px;
   padding: 0;
+  margin: 0;
   border: 0 !important;
-  border-radius: var(--app-radius-sm, 4px);
-  background: transparent;
+  border-radius: 999px;
+  background: var(--app-surface-strong);
   color: var(--app-muted, #888888);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  outline: none;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.help-close-btn svg {
+  display: block;
+  pointer-events: none;
 }
 
 .help-close-btn:hover {
   background: var(--app-surface-hover, #37373d);
   color: var(--app-fg, #ffffff);
+  box-shadow: var(--app-btn-inset);
 }
 
 .help-modal-body {

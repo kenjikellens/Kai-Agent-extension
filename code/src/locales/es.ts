@@ -57,5 +57,10 @@ export const es: Translations = {
     "keepThinkingGeneratingDesc": "Mantiene el bloque de pensamiento abierto mientras se genera la respuesta",
     "keepThinkingFinishedDesc": "Deja la tarjeta de razonamiento expandida tras completar la respuesta",
     apiKeysSettingsDesc: "Administre claves de API y pruebe conexiones en vivo para modelos en la nube",
-    testConnection: "Probar conexión"
+    testConnection: "Probar conexión",
+    "noWorkspaceSelected": "Ningún espacio de trabajo seleccionado",
+    "placeholderChat": "Pregunta a Kai lo que sea, calcula, convierte o busca en la web...",
+    "placeholderAsk": "Haz preguntas sobre la base de código de tu espacio de trabajo...",
+    "placeholderAgent": "Pide a Kai que edite código, ejecute tareas o corra comandos...",
+    "placeholderPlanning": "Describe una tarea del proyecto para generar un plan de implementación..."
 };

@@ -57,5 +57,10 @@ export const tr: Translations = {
     "keepThinkingGeneratingDesc": "Keeps the reasoning block open while the response is streaming",
     "keepThinkingFinishedDesc": "Leaves the reasoning card expanded after generation completes",
     apiKeysSettingsDesc: "API anahtarlarını yönetin ve bulut modelleri için canlı bağlantıyı test edin",
-    testConnection: "Bağlantıyı test et"
+    testConnection: "Bağlantıyı test et",
+    "noWorkspaceSelected": "Çalışma alanı seçilmedi",
+    "placeholderChat": "Kai'ye her şeyi sorun, hesaplayın, dönüştürün veya web'de arayın...",
+    "placeholderAsk": "Çalışma alanı kod tabanınız hakkında sorular sorun...",
+    "placeholderAgent": "Kai'den kod düzenlemesini, görevleri veya komutları çalıştırmasını isteyin...",
+    "placeholderPlanning": "Uygulama planı oluşturmak için bir proje görevi açıklayın..."
 };

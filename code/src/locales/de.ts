@@ -57,5 +57,10 @@ export const de: Translations = {
     "keepThinkingGeneratingDesc": "Hält den Denkblock während des Streamings geöffnet",
     "keepThinkingFinishedDesc": "Lässt die Denkkarte nach Abschluss der Antwort geöffnet",
     apiKeysSettingsDesc: "API-Schlüssel verwalten und Live-Verbindungen für Cloud-Modelle testen",
-    testConnection: "Verbindung testen"
+    testConnection: "Verbindung testen",
+    "noWorkspaceSelected": "Kein Arbeitsbereich ausgewählt",
+    "placeholderChat": "Fragen Sie Kai alles, berechnen, konvertieren oder im Web suchen...",
+    "placeholderAsk": "Fragen zur Codebasis des Arbeitsbereichs stellen...",
+    "placeholderAgent": "Bitten Sie Kai, Code zu bearbeiten, Aufgaben auszuführen oder Befehle zu starten...",
+    "placeholderPlanning": "Beschreiben Sie eine Projektaufgabe, um einen Implementierungsplan zu erstellen..."
 };
