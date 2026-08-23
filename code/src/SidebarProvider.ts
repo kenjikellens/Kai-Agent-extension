@@ -941,7 +941,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                                     <div class="category-content">
                                         <span class="setting-subtitle" style="margin-bottom: 6px;">${translations.apiKeysSettingsDesc || 'Manage API keys and test live connections for cloud models'}</span>
                                         <div class="setting-item" id="manage-keys-container">
-                                            <button type="button" class="btn-primary" id="manage-keys-btn">
+                                            <button type="button" class="btn btn--primary" id="manage-keys-btn">
                                                 ${svgs.manage_keys || ''}
                                                 <span>${translations.manageFreeProviderKeys || 'Manage External Provider Keys'}</span>
                                             </button>
