@@ -112,6 +112,10 @@ class WebviewIPCBridge {
         this.postMessage({ type: 'rollbackTurn', turnIds: ids });
     }
 
+    rollbackTurnChanges(turnIds) {
+        return this.rollbackTurn(turnIds);
+    }
+
     abort() {
         this.postMessage({ type: 'abort' });
     }

@@ -434,18 +434,46 @@ button:disabled {
   align-self: flex-end;
   background: var(--vscode-merge-common-header-background, rgba(120, 120, 120, 0.15));
   color: var(--app-fg);
-  border: 1px solid rgba(120, 120, 120, 0.25);
-  border-radius: 12px 12px 2px 12px;
+  border: 1px solid var(--app-border, rgba(120, 120, 120, 0.25));
+  border-radius: 999px;
+  padding: 6px 14px !important;
+  box-sizing: border-box;
+  word-break: break-word;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.user-message:hover {
+  background: var(--app-surface-hover, rgba(120, 120, 120, 0.22));
+  box-shadow: none !important;
+}
+
+.user-message.is-multiline,
+.user-message:has(br),
+.user-message:has(p + p),
+.user-message:has(ul),
+.user-message:has(ol),
+.user-message:has(pre) {
+  border-radius: 14px;
+  padding: 8px 14px !important;
 }
 
 .assistant-message {
   align-self: flex-start;
   max-width: 100%;
-  margin-top: 4px;
+  margin: 2px 0;
   background: transparent;
   border: 0;
   color: var(--app-fg);
   padding: 0 !important;
+}
+
+.assistant-message .message-content {
+  padding: 2px 0 !important;
+  line-height: 1.45;
+}
+
+.assistant-message .message-content p {
+  margin: 2px 0;
 }
 
 .response-container {
@@ -2219,22 +2247,34 @@ button:disabled {
    Tool cards
 ------------------------------ */
 .tool-status-row {
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
-  align-self: stretch;
-  margin: 2px 0;
-  padding: 4px 8px;
-  border-radius: var(--app-radius-sm);
+  align-self: flex-start;
+  margin: 2px 0 !important;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid var(--app-border-subtle);
   color: var(--app-muted);
   font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  box-sizing: border-box;
+  user-select: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .tool-status-row:hover {
   background: var(--app-surface-hover);
+  border-color: var(--app-border);
   color: var(--app-fg);
+  box-shadow: none !important;
+}
+
+.tool-status-row.expanded {
+  border-radius: var(--app-radius-md, 8px);
+  display: flex;
+  align-self: stretch;
 }
 
 .tool-call-header {
