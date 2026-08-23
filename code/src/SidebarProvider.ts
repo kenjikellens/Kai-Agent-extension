@@ -397,10 +397,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             let loadedModels: string[] = [];
             if (lmStudioConnected) {
                 loadedModels = await client.getLoadedModels().catch(() => []);
-                // Fallback: If api/v0/models returned no loaded state but LM Studio is online with models, default loadedModels to all lmModels
-                if (loadedModels.length === 0) {
-                    loadedModels = [...lmModels];
-                }
             } else if (isGeminiValid) {
                 loadedModels = [...geminiModels];
             }
