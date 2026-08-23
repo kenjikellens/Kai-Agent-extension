@@ -1221,6 +1221,7 @@ button:disabled {
 .dropdown-trigger:focus {
   background: var(--app-surface-hover);
   color: var(--app-fg);
+  box-shadow: var(--app-btn-inset);
 }
 
 /* Outer container clipping text behind the component */
@@ -2495,14 +2496,21 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 8px;
   gap: 8px;
   width: 100%;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
+  padding: 0 12px;
+  margin: 1.5px 0;
   box-sizing: border-box;
   border: 0 !important;
-  border-radius: var(--app-radius-md);
+  border-radius: 999px;
   background: transparent;
   cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  user-select: none;
   transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
