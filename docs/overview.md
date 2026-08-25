@@ -58,3 +58,6 @@ graph TD
 3. **Strict Build & Sync Workflow**:
    - Compile TypeScript: `npm run compile` in `Kai-Agent-extension/code`.
    - Sync Extension: Execute `update.bat` to copy compiled assets into VS Code and Antigravity IDE extension directories.
+
+4. **Localization Parity**:
+   - Maintains 100% dictionary key parity with `AllLocales.js` across all 18 languages.
