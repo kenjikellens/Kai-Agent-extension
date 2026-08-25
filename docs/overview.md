@@ -46,18 +46,17 @@ graph TD
 
 ---
 
-## 3. Extension-Specific UI & UX Principles
+## 4. CSS Architecture & Strict Prohibition of `!important`
+- **Zero `!important` Policy**: The use of `!important` is strictly prohibited across all stylesheets. Proper specificity, object-oriented CSS patterns, and clean cascading rules are required.
+- **Single Source of Truth**: All shared tokens must reside in `:root` and theme overrides, with exact single base classes per UI component.
 
-1. **Header & Dock Layout (No Sidebar)**:
-   - The Extension is hosted in a compact VS Code sidebar / editor tab.
-   - It does **not** have a permanent left sidebar.
-   - Mode switching (`agent`, `ask`, `planning`, `chat`), new chat creation, history, and settings are accessed from the top Header and Input dock.
-2. **Native VS Code Integration**:
-   - Icons use official VS Code Codicons (`codicons/codicon.css`) alongside custom standalone SVGs in `media/svg/`.
-   - Theme styling automatically inherits VS Code's active color theme.
-3. **Strict Build & Sync Workflow**:
-   - Compile TypeScript: `npm run compile` in `Kai-Agent-extension/code`.
-   - Sync Extension: Execute `update.bat` to copy compiled assets into VS Code and Antigravity IDE extension directories.
+---
+
+## 5. Triple-File Documentation Synchronization Mandate
+Whenever architecture, UI components, runtime features, or system design guidelines are modified, all 3 `AGENTS.md` and all 3 `overview.md` files must be updated simultaneously in lockstep:
+1. Root workspace: `.agents/AGENTS.md` and `.agents/overview.md`
+2. Desktop App: `KAI Agent App/.agents/AGENTS.md` and `KAI Agent App/docs/overview.md`
+3. Extension: `Kai-Agent-extension/.agents/AGENTS.md` and `Kai-Agent-extension/docs/overview.md`
 
 4. **Localization Parity**:
    - Maintains 100% dictionary key parity with `AllLocales.js` across all 18 languages.
