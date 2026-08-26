@@ -1,22 +1,5 @@
 import * as vscode from 'vscode';
-import { en } from './locales/en';
-import { nl } from './locales/nl';
-import { de } from './locales/de';
-import { fr } from './locales/fr';
-import { es } from './locales/es';
-import { zh } from './locales/zh';
-import { zh_tw } from './locales/zh-tw';
-import { pt } from './locales/pt';
-import { ja } from './locales/ja';
-import { ko } from './locales/ko';
-import { ru } from './locales/ru';
-import { it } from './locales/it';
-import { pl } from './locales/pl';
-import { tr } from './locales/tr';
-import { cs } from './locales/cs';
-import { hu } from './locales/hu';
-import { ar } from './locales/ar';
-import { hi } from './locales/hi';
+import { ALL_LOCALES } from './AllLocales';
 
 /**
  * Interface defining translation keys for UI elements and messages.
@@ -81,6 +64,15 @@ export interface Translations {
     placeholderAsk?: string;
     placeholderAgent?: string;
     placeholderPlanning?: string;
+    theme?: string;
+    themeDesc?: string;
+    darkTheme?: string;
+    lightTheme?: string;
+    systemTheme?: string;
+    uiScale?: string;
+    uiScaleDesc?: string;
+    thinkingMaxHeight?: string;
+    thinkingMaxHeightDesc?: string;
 }
 
 /**
@@ -92,30 +84,9 @@ export interface LanguageOption {
 }
 
 /**
- * Dictionary registry mapping language codes to their dedicated locale modules.
+ * Dictionary registry mapping language codes to unified ALL_LOCALES dictionary.
  */
-const LOCALES: Record<string, Translations> = {
-    en,
-    nl,
-    de,
-    fr,
-    es,
-    zh,
-    'zh-cn': zh,
-    'zh-tw': zh_tw,
-    pt,
-    'pt-br': pt,
-    ja,
-    ko,
-    ru,
-    it,
-    pl,
-    tr,
-    cs,
-    hu,
-    ar,
-    hi
-};
+const LOCALES: Record<string, Translations> = ALL_LOCALES;
 
 /**
  * Manages active language resolution and translation lookup.
