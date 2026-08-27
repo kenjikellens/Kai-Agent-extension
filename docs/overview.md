@@ -60,3 +60,7 @@ Whenever architecture, UI components, runtime features, or system design guideli
 
 4. **Localization Parity**:
    - Maintains 100% dictionary key parity with `AllLocales.js` across all 18 languages.
+
+5. **Universal Icon Buttons & CSS Parity**:
+   - All message bubble action buttons (copy, retry, edit, raw toggle, info) strictly utilize the unified `.icon-btn` component class with the hover outset/inset shadow token (`box-shadow: var(--app-btn-inset)`).
+
