@@ -67,6 +67,7 @@
 
   /* Animation Timing Tokens */
   --stream-word-fade-duration: 1000ms;
+  --stream-settle-delay: 180ms;
 }
 
 /* Light Theme Tokens Override for VS Code Light & High Contrast Light Themes */
