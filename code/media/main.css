@@ -457,6 +457,23 @@ button:disabled {
   padding: 8px 14px !important;
 }
 
+/* Keyframes: Smooth fade-in for streamed words */
+@keyframes kaiWordFadeIn {
+  0% {
+    opacity: 0;
+    filter: blur(1.5px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0px);
+  }
+}
+
+.kai-word-fade {
+  display: inline;
+  animation: kaiWordFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 .assistant-message {
   align-self: flex-start;
   max-width: 100%;
@@ -464,7 +481,7 @@ button:disabled {
   background: transparent;
   border: 0;
   color: var(--app-fg);
-  padding: 0 !important;
+  padding: 0;
 }
 
 .assistant-message .message-content {

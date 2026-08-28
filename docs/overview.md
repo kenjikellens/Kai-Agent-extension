@@ -64,3 +64,9 @@ Whenever architecture, UI components, runtime features, or system design guideli
 5. **Universal Icon Buttons & CSS Parity**:
    - All message bubble action buttons (copy, retry, edit, raw toggle, info) strictly utilize the unified `.icon-btn` component class with the hover outset/inset shadow token (`box-shadow: var(--app-btn-inset)`).
 
+6. **Streaming Word Fade-In System (Shared Parity)**:
+   - Streaming AI response tokens dynamically wrap newly detected words in `<span class="kai-word-fade">` to fade into view smoothly (`@keyframes kaiWordFadeIn`) without flickering or restarting animation on already-rendered words.
+   - Preserves HTML markup, `<pre>`, and `<code>` blocks intact without altering syntax highlighting.
+
+
+
