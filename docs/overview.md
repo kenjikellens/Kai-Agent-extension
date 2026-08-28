@@ -68,5 +68,10 @@ Whenever architecture, UI components, runtime features, or system design guideli
    - Streaming AI response tokens dynamically wrap newly detected words in `<span class="kai-word-fade">` to fade into view smoothly (`@keyframes kaiWordFadeIn`) without flickering or restarting animation on already-rendered words.
    - Preserves HTML markup, `<pre>`, and `<code>` blocks intact without altering syntax highlighting.
 
+7. **Markdown Formatting & List Hierarchy Engine**:
+   - The markdown italic parser strictly enforces CommonMark non-whitespace delimiter rules (`/(?:^|[\s\(\[\{])\*(?!\s)([^\*\r\n]+?)(?<!\s)\*(?=[\s\)\.\,\!\?\]\}]|$)/g`), preventing list bullet markers (`*   ...`) from ever triggering italic blocks.
+   - Accurately parses top-level and indented nested sub-bullets (`    *`, `  -`) into hierarchical `<ul class="md-list">` and `<ul class="md-list md-sublist">` trees.
+
+
 
 
