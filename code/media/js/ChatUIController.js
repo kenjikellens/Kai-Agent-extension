@@ -473,17 +473,15 @@ class ChatUIController {
     }
 
     /**
-     * Wraps newly streamed words with .kai-word-fade while preserving existing words without re-animating.
-     * Skips pre/code blocks and HTML tags to avoid breaking markup and syntax highlighting.
+     * Wraps words in HTML text nodes with .kai-word-fade during streaming.
+     * Skips pre/code blocks, svg, buttons, and HTML tags to avoid breaking markup and syntax highlighting.
      * @param {string} html Formatted HTML string.
-     * @returns {string} Processed HTML with word fade spans applied to newly detected words.
+     * @returns {string} Processed HTML with word fade spans applied to text tokens.
      */
     applyStreamingWordFade(html) {
         if (!html) return '';
-        let wordIndex = 0;
-        const previousCount = this.renderedWordCount || 0;
         const parts = html.split(/(<[^>]+>)/g);
-        let inPreOrCode = false;
+        let inCodeOrBlock = false;
         let result = '';
 
         for (let i = 0; i < parts.length; i++) {
@@ -491,29 +489,83 @@ class ChatUIController {
             if (!part) continue;
 
             if (part.startsWith('<')) {
-                if (/^<\s*(?:pre|code)\b/i.test(part)) {
-                    inPreOrCode = true;
-                } else if (/^<\/\s*(?:pre|code)\s*>/i.test(part)) {
-                    inPreOrCode = false;
+                if (/^<\s*(?:pre|code|svg|button|script|style)\b/i.test(part)) {
+                    inCodeOrBlock = true;
+                } else if (/^<\/\s*(?:pre|code|svg|button|script|style)\s*>/i.test(part)) {
+                    inCodeOrBlock = false;
                 }
                 result += part;
             } else {
-                if (inPreOrCode) {
+                if (inCodeOrBlock) {
                     result += part;
                 } else {
-                    const transformed = part.replace(/(\S+)/g, (match) => {
-                        const currentIdx = wordIndex++;
-                        if (currentIdx >= previousCount) {
-                            return `<span class="kai-word-fade">${match}</span>`;
-                        }
-                        return match;
-                    });
+                    const transformed = part.replace(/(\S+)/g, '<span class="kai-word-fade">$1</span>');
                     result += transformed;
                 }
             }
         }
-        this.renderedWordCount = wordIndex;
         return result;
+    }
+
+    /**
+     * Incrementally morphs target DOM element to match source DOM nodes without destroying untouched nodes.
+     * Preserves active CSS animations on existing elements while smoothly introducing newly appended nodes.
+     * @param {HTMLElement} target The existing DOM element to update.
+     * @param {DocumentFragment|HTMLElement} source The new DOM tree to sync from.
+     */
+    morphDOM(target, source) {
+        const targetNodes = Array.from(target.childNodes);
+        const sourceNodes = Array.from(source.childNodes);
+
+        // 1. Remove excess target nodes
+        while (targetNodes.length > sourceNodes.length) {
+            const excess = targetNodes.pop();
+            if (excess && excess.parentNode) excess.parentNode.removeChild(excess);
+        }
+
+        // 2. Diff and patch node by node
+        for (let i = 0; i < sourceNodes.length; i++) {
+            const sNode = sourceNodes[i];
+            const tNode = targetNodes[i];
+
+            if (!tNode) {
+                target.appendChild(sNode.cloneNode(true));
+                continue;
+            }
+
+            if (tNode.nodeType !== sNode.nodeType || tNode.nodeName !== sNode.nodeName) {
+                target.replaceChild(sNode.cloneNode(true), tNode);
+                continue;
+            }
+
+            if (tNode.nodeType === Node.TEXT_NODE) {
+                if (tNode.nodeValue !== sNode.nodeValue) {
+                    tNode.nodeValue = sNode.nodeValue;
+                }
+                continue;
+            }
+
+            if (tNode.nodeType === Node.ELEMENT_NODE) {
+                const tAttrs = tNode.attributes;
+                const sAttrs = sNode.attributes;
+
+                for (let a = tAttrs.length - 1; a >= 0; a--) {
+                    const attrName = tAttrs[a].name;
+                    if (!sNode.hasAttribute(attrName)) {
+                        tNode.removeAttribute(attrName);
+                    }
+                }
+
+                for (let a = 0; a < sAttrs.length; a++) {
+                    const attr = sAttrs[a];
+                    if (tNode.getAttribute(attr.name) !== attr.value) {
+                        tNode.setAttribute(attr.name, attr.value);
+                    }
+                }
+
+                this.morphDOM(tNode, sNode);
+            }
+        }
     }
 
     /**
@@ -754,8 +806,11 @@ class ChatUIController {
                         }
                     }
                     this.currentAssistantMsgElement.dataset.rawContent = this.currentAssistantText;
+                    const contentEl = this.currentAssistantMsgElement.querySelector('.message-content');
                     const animatedHtml = this.applyStreamingWordFade(formatted);
-                    this.currentAssistantMsgElement.querySelector('.message-content').innerHTML = animatedHtml;
+                    const tmpl = document.createElement('template');
+                    tmpl.innerHTML = animatedHtml;
+                    this.morphDOM(contentEl, tmpl.content);
 
                     // Ensure action bar is removed while actively streaming
                     const existingActions = this.currentAssistantMsgElement.querySelector('.message-actions');
@@ -1010,16 +1065,6 @@ class ChatUIController {
                 this.sendBtn.innerHTML = window.KAI_SVGS['send'] || '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>';
                 this.sendBtn.title = 'Send message';
                 this.removeActivityStatus();
-                if (this.currentAssistantMsgElement && this.currentAssistantText) {
-                    const isThinkingChecked = (this.settingsController && this.settingsController.showThinkingToggle) 
-                        ? this.settingsController.showThinkingToggle.checked 
-                        : (localStorage.getItem('kai.showThinking') !== 'false');
-                    const cleanFormatted = this.formatter.formatMarkdown(this.currentAssistantText, null, isThinkingChecked, null);
-                    const contentEl = this.currentAssistantMsgElement.querySelector('.message-content');
-                    if (contentEl) {
-                        contentEl.innerHTML = cleanFormatted;
-                    }
-                }
             }
         }
     }

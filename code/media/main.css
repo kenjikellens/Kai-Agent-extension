@@ -64,6 +64,9 @@
   --app-flyout-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   --app-scrollbar-thumb: rgba(255, 255, 255, 0.12);
   --app-scrollbar-thumb-hover: rgba(255, 255, 255, 0.22);
+
+  /* Animation Timing Tokens */
+  --stream-word-fade-duration: 1000ms;
 }
 
 /* Light Theme Tokens Override for VS Code Light & High Contrast Light Themes */
@@ -461,17 +464,15 @@ button:disabled {
 @keyframes kaiWordFadeIn {
   0% {
     opacity: 0;
-    filter: blur(1.5px);
   }
   100% {
     opacity: 1;
-    filter: blur(0px);
   }
 }
 
 .kai-word-fade {
   display: inline;
-  animation: kaiWordFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: kaiWordFadeIn var(--stream-word-fade-duration, 220ms) ease-out forwards;
 }
 
 .assistant-message {
