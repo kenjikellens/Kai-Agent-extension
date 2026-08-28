@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { LLMProviderFactory } from './providers/LLMProviderFactory';
+import { LMStudioClient } from './LMStudioClient';
 import { Tool, getRegisteredTools } from './tools';
 import { ContextManager, ContextMessage } from './ContextManager';
 import { EditorContextProvider, EditorContext } from './EditorContextProvider';
@@ -69,7 +70,7 @@ export class AgentExecutor {
         maxContextTokens: number = 16000,
         mode: string = 'agent',
         turnId?: string
-    ): Promise<{ reply: string; messages: { role: string; content: string }[]; modifiedFiles: string[] }> {
+    ): Promise<{ reply: string; messages: { role: string; content: string }[]; modifiedFiles: string[]; tokensPerSecond?: string | null }> {
         // Deep copy history to avoid mutating the original until loop is complete
         let messages: ContextMessage[] = [...chatHistory];
         const activeTurnId = turnId || `turn-${Date.now()}`;
@@ -358,10 +359,16 @@ export class AgentExecutor {
         // Append the final assistant response to the message history
         messages.push({ role: 'assistant', content: lastAssistantResponse });
 
+        let tokensPerSecond: string | null = null;
+        if (provider instanceof LMStudioClient) {
+            tokensPerSecond = provider.getLastTokensPerSecond();
+        }
+
         return {
             reply: lastAssistantResponse,
             messages: messages,
-            modifiedFiles: Array.from(modifiedFiles)
+            modifiedFiles: Array.from(modifiedFiles),
+            tokensPerSecond: tokensPerSecond
         };
     }
 

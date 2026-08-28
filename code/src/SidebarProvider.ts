@@ -314,7 +314,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             this._view.webview.postMessage({
                 type: 'reply',
                 content: result.reply,
-                modifiedFiles: result.modifiedFiles
+                modifiedFiles: result.modifiedFiles,
+                tokensPerSecond: result.tokensPerSecond
             });
         } catch (error: any) {
             // Re-throw if error was generated from manual abort cancellation
@@ -876,6 +877,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                                             <label for="language-select-container" style="font-size: 0.75rem; color: var(--app-muted); margin-bottom: 4px; display: block;">${translations.language}</label>
                                             <div id="language-select-container"></div>
                                         </div>
+                                        <div class="setting-item">
+                                            <label for="stream-settle-delay-select-container" style="font-size: 0.75rem; color: var(--app-muted); margin-bottom: 2px; display: block;">${translations.streamSettleDelay || 'Stream Lookahead Delay'}</label>
+                                            <span class="setting-subtitle">${translations.streamSettleDelayDesc || 'Buffer delay before streaming markdown formatting settles into the DOM'}</span>
+                                            <div id="stream-settle-delay-select-container"></div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -995,6 +1001,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                 <script nonce="${nonce}" src="${chatUIControllerUri}"></script>
                 <script nonce="${nonce}" src="${promptSubmissionOrchestratorUri}"></script>
                 <script nonce="${nonce}" src="${hashRouterUri}"></script>
+                <script nonce="${nonce}">
+                    try {
+                        const savedExtraDelay = parseInt(localStorage.getItem('kai.streamSettleDelay') || '0', 10);
+                        const baseDelay = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--stream-settle-base-delay'), 10) || 150;
+                        const effectiveSettle = baseDelay + (isNaN(savedExtraDelay) ? 0 : savedExtraDelay);
+                        document.documentElement.style.setProperty('--stream-settle-delay', effectiveSettle + 'ms');
+                    } catch (e) {}
+                </script>
                 <script nonce="${nonce}" src="${scriptUri}"></script>
             </body>
             </html>`;

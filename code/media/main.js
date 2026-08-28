@@ -289,16 +289,18 @@
                 model: modelDetails.model,
                 thinking: modelDetails.thinking,
                 reasoningEffort: modelDetails.reasoningEffort,
-                mode: appState.activeMode
+                mode: appState.activeMode,
+                tokensPerSecond: message.tokensPerSecond || null
             };
 
             if (chatUIController.currentAssistantMsgElement && chatUIController.chatContainer && chatUIController.chatContainer.contains(chatUIController.currentAssistantMsgElement)) {
                 if (formatted.trim()) {
                     chatUIController.currentAssistantMsgElement.dataset.rawContent = replyContent;
                     const existingActions = chatUIController.currentAssistantMsgElement.querySelector('.message-actions');
-                    if (!existingActions) {
-                        chatUIController.currentAssistantMsgElement.appendChild(chatUIController.createAssistantActionBar(appState.activeMode, effectiveMeta));
+                    if (existingActions) {
+                        existingActions.remove();
                     }
+                    chatUIController.currentAssistantMsgElement.appendChild(chatUIController.createAssistantActionBar(appState.activeMode, effectiveMeta));
                 } else {
                     chatUIController.currentAssistantMsgElement.remove();
                 }

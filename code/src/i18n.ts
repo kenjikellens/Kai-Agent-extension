@@ -73,6 +73,9 @@ export interface Translations {
     uiScaleDesc?: string;
     thinkingMaxHeight?: string;
     thinkingMaxHeightDesc?: string;
+    streamSettleDelay?: string;
+    streamSettleDelayDesc?: string;
+    speed?: string;
 }
 
 /**
