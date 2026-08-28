@@ -294,7 +294,7 @@
 
             if (chatUIController.currentAssistantMsgElement && chatUIController.chatContainer && chatUIController.chatContainer.contains(chatUIController.currentAssistantMsgElement)) {
                 if (formatted.trim()) {
-                    chatUIController.currentAssistantMsgElement.querySelector('.message-content').innerHTML = formatted;
+                    chatUIController.currentAssistantMsgElement.dataset.rawContent = replyContent;
                     const existingActions = chatUIController.currentAssistantMsgElement.querySelector('.message-actions');
                     if (!existingActions) {
                         chatUIController.currentAssistantMsgElement.appendChild(chatUIController.createAssistantActionBar(appState.activeMode, effectiveMeta));

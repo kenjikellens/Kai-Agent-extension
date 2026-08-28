@@ -66,8 +66,8 @@
   --app-scrollbar-thumb-hover: rgba(255, 255, 255, 0.22);
 
   /* Animation Timing Tokens */
-  --stream-word-fade-duration: 1000ms;
-  --stream-settle-delay: 180ms;
+  --stream-word-fade-duration: 500ms;
+  --stream-settle-delay: 250ms;
 }
 
 /* Light Theme Tokens Override for VS Code Light & High Contrast Light Themes */
