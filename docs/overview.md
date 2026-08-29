@@ -82,6 +82,19 @@ Whenever architecture, UI components, runtime features, or system design guideli
    - Measures live token generation throughput for local LM Studio models and displays the metric (`Speed: XX.X tok/s`) in the assistant message Info popover.
    - Omitted for external cloud provider APIs to maintain clean metadata.
 
+10. **Reasoning & Thinking Markdown Architecture**:
+    - Reasoning output encapsulated in `<think>...</think>` blocks is parsed into rich Markdown (headers, lists, tables, inline code, code blocks, bold, italics, blockquotes) via `MarkdownFormatter.formatThinkingMarkdown()`.
+    - Extracted thinking blocks are encapsulated in `%%THINKBLOCK${idx}%%` placeholders during `formatMarkdown()` to prevent cross-delimiter mangling and trailing whitespace accumulation.
+    - Live stream diffing updates smoothly via `morphDOM`, scrolling active thinking containers into view while preserving user collapse states and respecting the streaming delay pipeline.
+
+11. **Unified Thinking Accordion Container Architecture**:
+    - The thinking reasoning block is unified into a single `.thinking-block` accordion component modeled on `.settings-category`.
+    - When collapsed, it renders as a compact pill trigger (`background: transparent; max-width: fit-content; border: 0;`). When expanded, it forms a continuous bordered card container (`border: 1px solid var(--app-border-strong); border-radius: var(--app-radius-md); background: transparent; max-width: min(85%, 680px);`) housing both the `.thinking-header` trigger and the `.thinking-content` markdown body with zero detached borders.
+    - `ThinkingBlockComponent.toggle(header)` encapsulates collapsed state toggling and chevron rotation on the parent container.
+
+
+
+
 
 
 
