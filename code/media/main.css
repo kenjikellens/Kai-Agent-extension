@@ -84,11 +84,11 @@ body.vscode-high-contrast-light {
   --app-border: transparent;
   --app-border-strong: transparent;
   --app-border-subtle: transparent;
-  --app-surface: rgba(0, 0, 0, 0.02);
-  --app-surface-strong: rgba(0, 0, 0, 0.04);
-  --app-surface-hover: rgba(0, 0, 0, 0.06);
-  --app-surface-active: rgba(0, 0, 0, 0.08);
-  --app-btn-inset: none;
+  --app-surface: rgba(0, 0, 0, 0.04);
+  --app-surface-strong: rgba(0, 0, 0, 0.08);
+  --app-surface-hover: rgba(0, 0, 0, 0.14);
+  --app-surface-active: rgba(0, 0, 0, 0.20);
+  --app-btn-inset: 0 0 0 1.5px var(--app-surface-hover);
   --app-input-bg: var(--vscode-input-background, #ffffff);
   --app-input-border: var(--vscode-input-border, rgba(0, 0, 0, 0.12));
   --app-card-bg: rgba(0, 0, 0, 0.02);
@@ -238,7 +238,7 @@ button:disabled {
   align-items: center;
   justify-content: center;
   background: transparent;
-  color: var(--app-muted);
+  color: var(--app-fg);
   border: 0 !important;
   outline: none;
   cursor: pointer;
@@ -1265,12 +1265,12 @@ button:disabled {
   border: 0 !important;
   border-radius: 999px;
   background: var(--app-surface-strong);
-  color: var(--app-muted);
+  color: var(--app-fg);
   font-size: 0.72rem;
   text-align: left;
   cursor: pointer;
   user-select: none;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .dropdown-trigger:hover,
@@ -1344,7 +1344,7 @@ button:disabled {
 
 .dropdown-trigger-chevron,
 .thinking-chevron {
-  color: var(--app-muted);
+  color: var(--app-fg);
   flex-shrink: 0;
 }
 
@@ -2046,23 +2046,23 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   padding: 0 10px;
-  background: var(--app-input-bg);
+  background: var(--app-surface-strong);
   color: var(--app-fg);
-  border: 1px solid var(--app-input-border);
+  border: 0 !important;
+  outline: none;
   border-radius: var(--app-radius-sm);
   font-size: 0.75rem;
   cursor: pointer;
   user-select: none;
-  outline: none;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .custom-select-trigger:hover,
 .custom-select-trigger:focus,
 .custom-select-trigger.active {
   background: var(--app-surface-hover);
-  border-color: var(--app-border-strong);
   color: var(--app-fg);
+  box-shadow: var(--app-btn-inset);
 }
 
 /* Label text container within custom select trigger button */
@@ -2076,7 +2076,7 @@ button:disabled {
 
 /* Chevron icon indicator inside custom select trigger button */
 .custom-select-chevron {
-  color: var(--app-muted);
+  color: var(--app-fg);
   flex-shrink: 0;
   margin-left: 6px;
 }
