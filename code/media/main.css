@@ -74,33 +74,40 @@
 /* Light Theme Tokens Override for VS Code Light & High Contrast Light Themes */
 body.vscode-light,
 body.vscode-high-contrast-light {
+  --main-surface-card: #ffffff;
+  --main-surface-input: #ffffff;
+  --main-border-subtle: transparent;
+
   --app-bg: var(--vscode-sideBar-background, #f3f3f3);
-  --app-fg: var(--vscode-editor-foreground, var(--vscode-foreground, #24292e));
-  --app-muted: var(--vscode-descriptionForeground, #57606a);
-  --app-border: var(--vscode-widget-border, rgba(0, 0, 0, 0.12));
-  --app-border-strong: var(--vscode-widget-border, rgba(0, 0, 0, 0.22));
-  --app-border-subtle: rgba(0, 0, 0, 0.08);
-  --app-surface: rgba(0, 0, 0, 0.03);
-  --app-surface-strong: rgba(0, 0, 0, 0.06);
-  --app-surface-hover: rgba(0, 0, 0, 0.08);
-  --app-surface-active: rgba(0, 0, 0, 0.12);
+  --app-fg: var(--vscode-editor-foreground, var(--vscode-foreground, #0f172a));
+  --app-muted: var(--vscode-descriptionForeground, #334155);
+  --app-border: transparent;
+  --app-border-strong: transparent;
+  --app-border-subtle: transparent;
+  --app-surface: rgba(0, 0, 0, 0.02);
+  --app-surface-strong: rgba(0, 0, 0, 0.04);
+  --app-surface-hover: rgba(0, 0, 0, 0.06);
+  --app-surface-active: rgba(0, 0, 0, 0.08);
+  --app-btn-inset: none;
   --app-input-bg: var(--vscode-input-background, #ffffff);
-  --app-input-border: var(--vscode-input-border, rgba(0, 0, 0, 0.18));
-  --app-code-bg: var(--vscode-editor-background, #f6f8fa);
+  --app-input-border: var(--vscode-input-border, rgba(0, 0, 0, 0.12));
+  --app-card-bg: rgba(0, 0, 0, 0.02);
+  --app-card-border: transparent;
+  --app-code-bg: var(--vscode-editor-background, #f1f5f9);
   --app-inline-code-bg: rgba(0, 0, 0, 0.05);
-  --app-tool-dropdown-bg: rgba(0, 0, 0, 0.04);
-  --app-tool-dropdown-text: #2e7d32;
-  --app-tool-call-text: #007acc;
-  --app-tool-query-text: #00838f;
-  --app-tool-query-bg: rgba(0, 0, 0, 0.05);
+  --app-tool-dropdown-bg: rgba(0, 0, 0, 0.03);
+  --app-tool-dropdown-text: #1b5e20;
+  --app-tool-call-text: #0284c7;
+  --app-tool-query-text: #0e7490;
+  --app-tool-query-bg: rgba(0, 0, 0, 0.04);
   --app-tool-error-bg: rgba(211, 47, 47, 0.08);
-  --app-tool-error-text: #c62828;
+  --app-tool-error-text: #b91c1c;
   --app-file-summary-bg: var(--vscode-editor-background, #ffffff);
   --app-dropdown-bg: var(--vscode-dropdown-background, #ffffff);
-  --app-dropdown-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  --app-flyout-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  --app-scrollbar-thumb: rgba(0, 0, 0, 0.15);
-  --app-scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+  --app-dropdown-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --app-flyout-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
+  --app-scrollbar-thumb: rgba(0, 0, 0, 0.16);
+  --app-scrollbar-thumb-hover: rgba(0, 0, 0, 0.28);
 }
 
 .kai-spinner {
@@ -1778,20 +1785,20 @@ button:disabled {
 /* Hover & focus states for unified category header with inset effect */
 .category-header-btn:hover,
 .category-header-btn:focus-visible {
-  color: var(--app-fg, #ffffff);
+  color: var(--app-fg);
 }
 
 .settings-category .category-header-btn:hover,
 .settings-category .category-header-btn:focus-visible {
   background: var(--app-surface-hover) !important;
-  color: var(--app-fg, #ffffff);
+  color: var(--app-fg);
   border: none !important;
   box-shadow: var(--app-btn-inset);
 }
 
 .settings-category .category-header-btn:active {
   background: var(--app-surface-active) !important;
-  color: var(--app-fg, #ffffff);
+  color: var(--app-fg);
   box-shadow: none !important;
 }
 
@@ -1805,9 +1812,9 @@ button:disabled {
   transition: color 0.15s ease;
 }
 
-/* When category is open/expanded: title is lighter */
+/* When category is open/expanded: title is rendered in primary foreground */
 .settings-category:not(.collapsed) .category-title {
-  color: var(--app-fg, #ffffff);
+  color: var(--app-fg);
 }
 
 /* Setting Item Label & Switch Label - Thinner font weight (400) and soft lighter color */
